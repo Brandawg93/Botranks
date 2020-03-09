@@ -1,8 +1,8 @@
 let Chart;
 
 $(document).ready(function() {
-	$.getJSON( "api/getranks?after=1d", function( data ) {
-		$("#grid-loader").remove();
+	$.getJSON( 'api/getranks?after=1d', function( data ) {
+		$('#grid-loader').remove();
 		let votes = data['body']['votes'];
 		let pie = data['body']['pie'];
 		let ranks = data['body']['ranks'];
@@ -27,8 +27,8 @@ $(document).ready(function() {
 			});
 		});
 
-		$("#ranksGrid").jsGrid({
-			width: "100%",
+		$('#ranksGrid').jsGrid({
+			width: '100%',
 			inserting: false,
 			editing: false,
 			sorting: true,
@@ -36,11 +36,11 @@ $(document).ready(function() {
 			pageSize: 100,
 			data: ranks,
 			fields: [
-				{ name: "rank", title: "Rank", type: "number", width: 50 },
-				{ name: "bot", title: "Bot Name", type: "text", width: 150 },
-				{ name: "score", title: "Score", type: "number", width: 75 },
-				{ name: "good_bots", title: "Good Bot Votes", type: "number", width: 75 },
-				{ name: "bad_bots", title: "Bad Bot Votes", type: "number", width: 75 }
+				{ name: 'rank', title: 'Rank', type: 'number', width: 50 },
+				{ name: 'bot', title: 'Bot Name', type: 'text', width: 150 },
+				{ name: 'score', title: 'Score', type: 'number', width: 75 },
+				{ name: 'good_bots', title: 'Good Bot Votes', type: 'number', width: 75 },
+				{ name: 'bad_bots', title: 'Bad Bot Votes', type: 'number', width: 75 }
 			]
 		});
 	});
