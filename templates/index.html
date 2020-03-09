@@ -1,25 +1,73 @@
 <html lang="en">
 	<head>
+        <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
 		<title>Bot Ranks</title>
-        <link rel="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
-        <link rel="{{ url_for('static', filename='css/main.css')}}">
+        <link type="text/css" rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+        <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
+        <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css')}}">
 		<script
 		  src="https://code.jquery.com/jquery-3.4.1.min.js"
 		  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
 		  crossorigin="anonymous">
-		 </script>
+        </script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
-		 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
-		 <script src="{{ url_for('static', filename='js/main.js')}}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
+        <script src="{{ url_for('static', filename='js/main.js')}}"></script>
 	</head>
 	<body>
-		<h1>Botranks</h1>
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md">
-                    <canvas id="votes" width="200" height="200"></canvas>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
+            <a class="navbar-brand abs" href="#">Botranks</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsingNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="navbar-collapse collapse" id="collapsingNavbar">
+                <ul class="navbar-nav nav nav-pills mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-toggle="tab" href="#home">Ranks</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" id="statsTab" href="#stats">Stats</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <select class="duration-select">
+                            <option selected>Day</option>
+                            <option>Week</option>
+                            <option>Month</option>
+                            <option>Year</option>
+                        </select>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <br/>
+        <div class="tab-content">
+          <div id="home" class="tab-pane fade in active show">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md">
+                        <div id="ranksGrid"></div>
+                    </div>
                 </div>
             </div>
+          </div>
+          <div id="stats" class="tab-pane fade">
+              <div class="container">
+                  <div class="row">
+                    <div class="col-md">
+                        <canvas id="votes"></canvas>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md" style="position: relative; height:300px;">
+                        <canvas id="votesPie"></canvas>
+                    </div>
+                  </div>
+              </div>
+          </div>
         </div>
 	</body>
 </html>

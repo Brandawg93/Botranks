@@ -1,0 +1,52 @@
+@media (prefers-color-scheme: dark) {
+    body{
+        background-color: black;
+    }
+
+    #headerTitle {
+        color: white;
+    }
+
+    /*JS Grid Dark mode*/
+    .jsgrid-header-row>.jsgrid-header-cell {
+        background: #202020;
+        color: white;
+    }
+    .jsgrid-row>.jsgrid-cell {
+        background: black;
+    }
+    .jsgrid-alt-row>.jsgrid-cell {
+        background: #202020;
+    }
+    .jsgrid-selected-row>.jsgrid-cell {
+        background: #505050;
+        border-color: #505050;
+    }
+    .jsgrid-cell {
+        border: 1px solid #202020;
+        color: white;
+    }
+    .jsgrid-edit-row>.jsgrid-cell,
+    .jsgrid-filter-row>.jsgrid-cell,
+    .jsgrid-grid-body,
+    .jsgrid-grid-header,
+    .jsgrid-header-row>.jsgrid-header-cell,
+    .jsgrid-insert-row>.jsgrid-cell {
+        border: 1px solid #202020;
+    }
+
+    .jsgrid-pager {
+        color: white;
+    }
+}
+
+@media (min-width: 768px) {
+.navbar-brand.abs
+    {
+        position: absolute;
+        width: 100%;
+        left: 0;
+        text-align: center;
+        z-index: -1;
+    }
+}

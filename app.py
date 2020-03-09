@@ -53,14 +53,18 @@ def lambda_handler():
     )
     items = response['Items']
     ranks = []
+    total_gb = 0
+    total_bb = 0
     for key, group in groupby(items, key=lambda x: x['bot']):
         good_bots = 0
         bad_bots = 0
         for vote in group:
             if vote['vote'] == 'G':
                 good_bots += 1
+                total_gb += 1
             if vote['vote'] == 'B':
                 bad_bots += 1
+                total_bb += 1
 
         ranks.append(
             {
@@ -73,42 +77,60 @@ def lambda_handler():
     ranks.sort(key=lambda x: x['score'], reverse=True)
     for i in range(len(ranks)):
         ranks[i]['rank'] = i + 1
-    total_times = [datetime.datetime.fromtimestamp(x['timestamp']) for x in items]
-    good_times = [datetime.datetime.fromtimestamp(x['timestamp']) for x in items if x['vote'] == 'G']
-    bad_times = [datetime.datetime.fromtimestamp(x['timestamp']) for x in items if x['vote'] == 'B']
+    for item in items:
+        item['datetime'] = datetime.datetime.fromtimestamp(item['timestamp'])
 
-    total_times.sort()
-    good_times.sort()
-    bad_times.sort()
+    items.sort(key=lambda x: x['timestamp'])
     votes = {
         'labels': [],
         'datasets':
         [
             {
-                'label': 'Total Votes',
-                'data': []
+                'label': 'Bad Bot Votes',
+                'data': [],
+                'backgroundColor': 'rgba(255, 0, 0, 1)'
             },
             {
                 'label': 'Good Bot Votes',
-                'data': []
+                'data': [],
+                'backgroundColor': 'rgba(0, 0, 255, 1)'
             },
             {
-                'label': 'Bad Bot Votes',
-                'data': []
+                'label': 'Total Votes',
+                'data': [],
+                'backgroundColor': 'rgba(128, 0, 128, 1)'
+            }
+
+        ]
+    }
+    pie = {
+        'labels': ['Good Bot Votes', 'Bad Bot Votes'],
+        'datasets':
+        [
+            {
+                'data': [total_gb, total_bb],
+                'backgroundColor': ['rgba(0, 255, 0, 1)', 'rgba(255, 0, 0, 1)']
             }
         ]
     }
-    for key, group in groupby(total_times, key=lambda x: x.hour):
+    for key, group in groupby(items, key=lambda x: x['datetime'].hour):
         votes['labels'].append(key)
-        votes['datasets'][0]['data'].append(len(list(group)))
-    for key, group in groupby(good_times, key=lambda x: x.hour):
-        votes['datasets'][1]['data'].append(len(list(group)))
-    for key, group in groupby(bad_times, key=lambda x: x.hour):
-        votes['datasets'][2]['data'].append(len(list(group)))
+        lst = list(group)
+        good_count = 0
+        bad_count = 0
+        for item in lst:
+            if item['vote'] == 'G':
+                good_count += 1
+            if item['vote'] == 'B':
+                bad_count += 1
+        votes['datasets'][2]['data'].append(len(lst))
+        votes['datasets'][1]['data'].append(good_count)
+        votes['datasets'][0]['data'].append(bad_count)
 
     response = {
         'ranks': ranks,
-        'votes': votes
+        'votes': votes,
+        'pie': pie
     }
     return {
         "isBase64Encoded": False,
