@@ -44,6 +44,9 @@
             </div>
         </nav>
         <br/>
+        <div id="grid-loader" class="spinner-border text-dark" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
         <div class="tab-content">
           <div id="home" class="tab-pane fade in active show">
             <div class="container">
@@ -57,17 +60,23 @@
           <div id="stats" class="tab-pane fade">
               <div class="container">
                   <div class="row">
-                    <div class="col-md">
+                    <div class="col-md" id="votesContainer">
                         <canvas id="votes"></canvas>
                     </div>
                   </div>
                   <div class="row">
-                    <div class="col-md">
+                    <div class="col-md" id="pieContainer">
                         <canvas id="votesPie"></canvas>
                     </div>
                   </div>
               </div>
           </div>
         </div>
+        <footer class="footer">
+            <div class="container text-center">
+                <p class="m-0"><small>Powered by <a href="https://pushshift.io/">Pushshift</a>.</small></p>
+                <p class="m-0"><small>© Brandawg93. All Rights Reserved.</small></p>
+            </div>
+        </footer>
 	</body>
 </html>

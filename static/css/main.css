@@ -7,6 +7,14 @@
         color: white;
     }
 
+    footer {
+        color: white;
+    }
+
+    #grid-loader {
+        color: white !important;
+    }
+
     /*JS Grid Dark mode*/
     .jsgrid-header-row>.jsgrid-header-cell {
         background: #202020;
@@ -42,7 +50,20 @@
 
 .jsgrid-grid-header,
 .jsgrid-grid-body {
-    overflow: hidden;
+    overflow-y: hidden;
+}
+
+#votesContainer, #pieContainer {
+    height: 45vh;
+}
+
+.spinner-border {
+    z-index: 1;
+    width: 5rem;
+    height: 5rem;
+    position: fixed;
+    left: calc(50% - 45px);
+    top: calc(50% - 45px);
 }
 
 @media (min-width: 768px) {

@@ -1,5 +1,6 @@
 $(document).ready(function() {
 	$.getJSON( "api/getranks?after=1d", function( data ) {
+		$("#grid-loader").remove();
 		let votes = data['body']['votes'];
 		let pie = data['body']['pie'];
 		let ranks = data['body']['ranks'];
