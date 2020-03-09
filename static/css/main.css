@@ -40,6 +40,11 @@
     }
 }
 
+.jsgrid-grid-header,
+.jsgrid-grid-body {
+    overflow: hidden;
+}
+
 @media (min-width: 768px) {
 .navbar-brand.abs
     {
