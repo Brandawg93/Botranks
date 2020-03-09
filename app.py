@@ -76,7 +76,7 @@ def lambda_handler():
             }
         )
     ranks.sort(key=lambda x: x['score'], reverse=True)
-    for count, elt in enumerate(ranks):
+    for count, _ in enumerate(ranks):
         ranks[count]['rank'] = count + 1
     for item in items:
         item['datetime'] = datetime.datetime.fromtimestamp(item['timestamp'])
@@ -143,4 +143,4 @@ def lambda_handler():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+    app.run(host='127.0.0.1', port=80)
