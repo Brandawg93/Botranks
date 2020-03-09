@@ -11,7 +11,7 @@ dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 
 @app.route('/')
 def index():
-    """Displays the index page accessible at '/'"""
+    """Displays the index page accessible at '/'."""
     return flask.render_template('index.html')
 
 
@@ -22,6 +22,7 @@ def calculate_score(good_bots, bad_bots):
 
 
 def get_epoch(after):
+    """Get epoch from string."""
     length = abs(int(after[:-1]))
     l_type = after[-1]
     if l_type not in 'hdwMy':
@@ -75,8 +76,8 @@ def lambda_handler():
             }
         )
     ranks.sort(key=lambda x: x['score'], reverse=True)
-    for i in range(len(ranks)):
-        ranks[i]['rank'] = i + 1
+    for count, elt in enumerate(ranks):
+        ranks[count]['rank'] = count + 1
     for item in items:
         item['datetime'] = datetime.datetime.fromtimestamp(item['timestamp'])
 

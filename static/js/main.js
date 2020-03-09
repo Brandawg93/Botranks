@@ -1,3 +1,5 @@
+let Chart;
+
 $(document).ready(function() {
 	$.getJSON( "api/getranks?after=1d", function( data ) {
 		$("#grid-loader").remove();
@@ -11,16 +13,16 @@ $(document).ready(function() {
 				type: 'line',
 				data: votes,
 				options: {
-				  responsive: true,
-				  maintainAspectRatio: false
+					responsive: true,
+					maintainAspectRatio: false
 				}
 			});
 			let myDoughnutChart = new Chart(ctxPie, {
 				type: 'doughnut',
 				data: pie,
 				options: {
-				  responsive: true,
-				  maintainAspectRatio: false
+					responsive: true,
+					maintainAspectRatio: false
 				}
 			});
 		});
