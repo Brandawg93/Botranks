@@ -26,7 +26,7 @@ $(document).ready(function() {
 
 		$("#ranksGrid").jsGrid({
 			width: "100%",
-			height: "calc(100vh - 75px)",
+			height: "100%",
 			inserting: false,
 			editing: false,
 			sorting: true,
