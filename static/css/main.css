@@ -15,6 +15,10 @@
         color: white;
     }
 
+    .back-to-top {
+        background-color: #505050;
+    }
+
     /*JS Grid Dark mode*/
     .jsgrid-header-row>.jsgrid-header-cell {
         background: #202020;
@@ -48,6 +52,18 @@
     }
 }
 
+@media (prefers-color-scheme: light) {
+    .back-to-top {
+        background-color: #d9d9d9;
+    }
+}
+
+@media (prefers-color-scheme: no-preference) {
+    .back-to-top {
+        background-color: #d9d9d9;
+    }
+}
+
 .jsgrid-grid-header,
 .jsgrid-grid-body {
     overflow-y: hidden;
@@ -73,7 +89,6 @@
     right: 20px;
     display:none;
     height: 45px;
-    background-color: #505050;
 }
 
 @media (min-width: 768px) {
