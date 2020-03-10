@@ -46,7 +46,7 @@ def lambda_handler():
     after = flask.request.args.get('after')
     if not after:
         after = '1d'
-    db_table = 'VotesTest'
+    db_table = 'Votes'
     epoch = get_epoch(after)
     table = dynamodb.Table(db_table)
     response = table.scan(
@@ -59,6 +59,8 @@ def lambda_handler():
     for key, group in groupby(items, key=lambda x: x['bot']):
         good_bots = 0
         bad_bots = 0
+        comment_karma = 0
+        link_karma = 0
         for vote in group:
             if vote['vote'] == 'G':
                 good_bots += 1
@@ -66,13 +68,19 @@ def lambda_handler():
             if vote['vote'] == 'B':
                 bad_bots += 1
                 total_bb += 1
+            if vote['comment_karma'] > comment_karma:
+                comment_karma = vote['comment_karma']
+            if vote['link_karma'] > comment_karma:
+                comment_karma = vote['link_karma']
 
         ranks.append(
             {
                 'bot': key,
                 'score': calculate_score(good_bots, bad_bots),
                 'good_bots': good_bots,
-                'bad_bots': bad_bots
+                'bad_bots': bad_bots,
+                'comment_karma': int(comment_karma),
+                'link_karma': int(link_karma)
             }
         )
     ranks.sort(key=lambda x: x['score'], reverse=True)

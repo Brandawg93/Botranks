@@ -13,7 +13,20 @@ let getUrlParameter = function getUrlParameter(sParam) {
     }
 };
 
+function checkAdBlocker() {
+	window.onload = function() {
+		setTimeout(function() {
+			let ad = document.querySelector("ins.adsbygoogle");
+			if (ad && ad.innerHTML.replace(/\s/g, "").length === 0) {
+				ad.style.cssText = 'display:block !important';
+				ad.innerHTML = "You seem to blocking Google AdSense ads in your browser.";
+			}
+		}, 2000);
+	};
+}
+
 $(document).ready(function() {
+	checkAdBlocker();
 	$.getJSON( 'api/getranks?after=1d', function( data ) {
 		$('#grid-loader').remove();
 		let votes = data['body']['votes'];
@@ -27,7 +40,19 @@ $(document).ready(function() {
 				data: votes,
 				options: {
 					responsive: true,
-					maintainAspectRatio: false
+					maintainAspectRatio: false,
+					scales: {
+						xAxes: [{
+							gridLines: {
+								color: "#d9d9d9"
+							}
+						}],
+						yAxes: [{
+							gridLines: {
+								color: "#d9d9d9"
+							}
+						}]
+        			}
 				}
 			});
 			let myDoughnutChart = new Chart(ctxPie, {
@@ -74,7 +99,9 @@ $(document).ready(function() {
 				{ name: 'bot', title: 'Bot Name', type: 'text', width: 150 },
 				{ name: 'score', title: 'Score', type: 'number', width: 75 },
 				{ name: 'good_bots', title: 'Good Bot Votes', type: 'number', width: 75 },
-				{ name: 'bad_bots', title: 'Bad Bot Votes', type: 'number', width: 75 }
+				{ name: 'bad_bots', title: 'Bad Bot Votes', type: 'number', width: 75 },
+				{ name: 'comment_karma', title: 'Comment Karma', type: 'number', width: 75 },
+				{ name: 'link_karma', title: 'Link Karma', type: 'number', width: 75 }
 			]
 		});
 	});
