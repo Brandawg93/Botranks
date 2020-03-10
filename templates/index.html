@@ -2,10 +2,22 @@
 	<head>
         <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
 		<title>Bot Ranks</title>
+
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-160195151-1"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'UA-160195151-1');
+        </script>
+
         <link type="text/css" rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
         <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
         <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css')}}">
+
+        <script data-ad-client="ca-pub-6473000979656682" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 		<script
 		  src="https://code.jquery.com/jquery-3.4.1.min.js"
 		  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
@@ -48,29 +60,29 @@
             <span class="sr-only">Loading...</span>
         </div>
         <div class="tab-content">
-          <div id="home" class="tab-pane fade in active show">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md">
-                        <div id="ranksGrid"></div>
+            <div id="home" class="tab-pane fade in active show">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md">
+                            <div id="ranksGrid"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-          </div>
-          <div id="stats" class="tab-pane fade">
-              <div class="container">
-                  <div class="row">
-                    <div class="col-md" id="votesContainer">
-                        <canvas id="votes"></canvas>
+            <div id="stats" class="tab-pane fade">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md" id="votesContainer">
+                            <canvas id="votes"></canvas>
+                        </div>
                     </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-md" id="pieContainer">
-                        <canvas id="votesPie"></canvas>
+                    <div class="row">
+                        <div class="col-md" id="pieContainer">
+                            <canvas id="votesPie"></canvas>
+                        </div>
                     </div>
-                  </div>
-              </div>
-          </div>
+                </div>
+            </div>
         </div>
         <footer class="footer">
             <div class="container text-center">
