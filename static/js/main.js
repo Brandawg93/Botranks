@@ -1,5 +1,3 @@
-let Chart;
-
 $(document).ready(function() {
 	$.getJSON( 'api/getranks?after=1d', function( data ) {
 		$('#grid-loader').remove();
