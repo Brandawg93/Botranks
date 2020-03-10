@@ -8,7 +8,7 @@ let getUrlParameter = function getUrlParameter(sParam) {
         sParameterName = sURLVariables[i].split('=');
 
         if (sParameterName[0] === sParam) {
-            return sParameterName[1] === undefined ? true : sParameterName[1];
+            return sParameterName[1] === 'undefined' ? true : sParameterName[1];
         }
     }
 };
@@ -16,10 +16,10 @@ let getUrlParameter = function getUrlParameter(sParam) {
 function checkAdBlocker() {
 	window.onload = function() {
 		setTimeout(function() {
-			let ad = document.querySelector("ins.adsbygoogle");
-			if (ad && ad.innerHTML.replace(/\s/g, "").length === 0) {
+			let ad = document.querySelector('ins.adsbygoogle');
+			if (ad && ad.innerHTML.replace(/\s/g, '').length === 0) {
 				ad.style.cssText = 'display:block !important';
-				ad.innerHTML = "You seem to blocking Google AdSense ads in your browser.";
+				ad.innerHTML = 'You seem to blocking Google AdSense ads in your browser.';
 			}
 		}, 2000);
 	};
@@ -82,7 +82,7 @@ $(document).ready(function() {
 						let rank = ranks.find(x => x['bot'] === bot);
 						let page = Math.ceil(rank['rank'] / 100);
 						if (page > 1) {
-							let grid = $("#ranksGrid").data("JSGrid");
+							let grid = $('#ranksGrid').data('JSGrid');
 							grid.openPage(page);
 						}
 						let cell = $('td:contains(\'' + bot + '\')');
