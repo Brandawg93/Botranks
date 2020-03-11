@@ -5,7 +5,7 @@ let getUrlParameter = function getUrlParameter(sParam) {
         i;
 
     for (i = 0; i < sURLVariables.length; i++) {
-        sParameterName = sURLVariables[i].split('=');
+        sParameterName = sURLVariables[`${i}`].split('=');
 
         if (sParameterName[0] === sParam) {
             return sParameterName[1] === 'undefined' ? true : sParameterName[1];
@@ -25,9 +25,8 @@ function checkAdBlocker() {
 	};
 }
 
-$(document).ready(function() {
-	checkAdBlocker();
-	$.getJSON( 'api/getranks?after=1d', function( data ) {
+function loadData(time) {
+	$.getJSON( 'api/getranks?after=' + time, function( data ) {
 		$('#grid-loader').remove();
 		let votes = data['body']['votes'];
 		let pie = data['body']['pie'];
@@ -44,15 +43,15 @@ $(document).ready(function() {
 					scales: {
 						xAxes: [{
 							gridLines: {
-								color: "#d9d9d9"
+								color: '#d9d9d9'
 							}
 						}],
 						yAxes: [{
 							gridLines: {
-								color: "#d9d9d9"
+								color: '#d9d9d9'
 							}
 						}]
-        			}
+					}
 				}
 			});
 			let myDoughnutChart = new Chart(ctxPie, {
@@ -74,12 +73,12 @@ $(document).ready(function() {
 			paging: true,
 			pageSize: 100,
 			data: ranks,
-			onRefreshed: function() {
+			onRefreshed() {
 				if (firstLoad) {
 					firstLoad = false;
 					let bot = getUrlParameter('bot');
 					if (typeof bot !== 'undefined') {
-						let rank = ranks.find(x => x['bot'] === bot);
+						let rank = ranks.find((x) => x['bot'] === bot);
 						let page = Math.ceil(rank['rank'] / 100);
 						if (page > 1) {
 							let grid = $('#ranksGrid').data('JSGrid');
@@ -105,7 +104,18 @@ $(document).ready(function() {
 			]
 		});
 	});
+}
 
+$(document).ready(function() {
+	checkAdBlocker();
+	loadData('1d');
+
+	$(".dropdown-menu a").click(function() {
+		$(".dropdown-menu a").removeClass('active');
+		$(this).addClass('active');
+		let time = $(this).data('value');
+		loadData(time);
+	});
 	$(window).scroll(function () {
 		if ($(this).scrollTop() > 50) {
 			$('#back-to-top').fadeIn();

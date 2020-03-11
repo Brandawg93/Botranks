@@ -45,13 +45,16 @@
                     </li>
                 </ul>
                 <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
-                        <select class="duration-select">
-                            <option selected>Day</option>
-                            <option>Week</option>
-                            <option>Month</option>
-                            <option>Year</option>
-                        </select>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Duration
+                        </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item active" href="#" data-value="1d">Day</a>
+                        <a class="dropdown-item" href="#" data-value="1w">Week</a>
+                        <a class="dropdown-item" href="#" data-value="1M">Month</a>
+                        <a class="dropdown-item" href="#" data-value="1y">Year</a>
+                    </div>
                     </li>
                 </ul>
             </div>
