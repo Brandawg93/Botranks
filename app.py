@@ -70,8 +70,8 @@ def lambda_handler():
                 total_bb += 1
             if vote['comment_karma'] > comment_karma:
                 comment_karma = vote['comment_karma']
-            if vote['link_karma'] > comment_karma:
-                comment_karma = vote['link_karma']
+            if vote['link_karma'] > link_karma:
+                link_karma = vote['link_karma']
 
         ranks.append(
             {
