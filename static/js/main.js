@@ -68,7 +68,6 @@ function loadData(time, refresh=false) {
 			refreshCharts(data);
 		});
 		if (refresh && statsTab.hasClass('active')) {
-			console.log('refreshing');
 			refreshCharts(data);
 		}
 		let ranks = data['body']['ranks'];
@@ -100,6 +99,10 @@ function loadData(time, refresh=false) {
 						}
 					}
 				}
+				$('.jsgrid-row, .jsgrid-alt-row').click(function() {
+					let bot = $(this).children()[1].innerHTML;
+					window.open('https://www.reddit.com/u/' + bot);
+				});
 			},
 			fields: [
 				{ name: 'rank', title: 'Rank', type: 'number', width: 50 },
@@ -118,7 +121,7 @@ $(document).ready(function() {
 	checkAdBlocker();
 	loadData('1y');
 
-	$(".dropdown-menu a").click(function() {
+	$('.dropdown-menu a').click(function() {
 		$(".dropdown-menu a").removeClass('active');
 		$(this).addClass('active');
 		let time = $(this).data('value');
