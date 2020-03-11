@@ -13,6 +13,41 @@ let getUrlParameter = function getUrlParameter(sParam) {
     }
 };
 
+function refreshCharts(data) {
+	let votes = data['body']['votes'];
+	let pie = data['body']['pie'];
+	let ctx = document.getElementById('votes').getContext('2d');
+	let ctxPie = document.getElementById('votesPie').getContext('2d');
+	let myLineChart = new Chart(ctx, {
+		type: 'line',
+		data: votes,
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			scales: {
+				xAxes: [{
+					gridLines: {
+						color: '#d9d9d9'
+					}
+				}],
+				yAxes: [{
+					gridLines: {
+						color: '#d9d9d9'
+					}
+				}]
+			}
+		}
+	});
+	let myDoughnutChart = new Chart(ctxPie, {
+		type: 'doughnut',
+		data: pie,
+		options: {
+			responsive: true,
+			maintainAspectRatio: false
+		}
+	});
+}
+
 function checkAdBlocker() {
 	window.onload = function() {
 		setTimeout(function() {
@@ -25,45 +60,18 @@ function checkAdBlocker() {
 	};
 }
 
-function loadData(time) {
+function loadData(time, refresh=false) {
 	$.getJSON( 'api/getranks?after=' + time, function( data ) {
 		$('#grid-loader').remove();
-		let votes = data['body']['votes'];
-		let pie = data['body']['pie'];
-		let ranks = data['body']['ranks'];
-		$('.nav-pills #statsTab').on('shown.bs.tab', function(){
-			let ctx = document.getElementById('votes').getContext('2d');
-			let ctxPie = document.getElementById('votesPie').getContext('2d');
-			let myLineChart = new Chart(ctx, {
-				type: 'line',
-				data: votes,
-				options: {
-					responsive: true,
-					maintainAspectRatio: false,
-					scales: {
-						xAxes: [{
-							gridLines: {
-								color: '#d9d9d9'
-							}
-						}],
-						yAxes: [{
-							gridLines: {
-								color: '#d9d9d9'
-							}
-						}]
-					}
-				}
-			});
-			let myDoughnutChart = new Chart(ctxPie, {
-				type: 'doughnut',
-				data: pie,
-				options: {
-					responsive: true,
-					maintainAspectRatio: false
-				}
-			});
+		let statsTab = $('.nav-pills #statsTab');
+		statsTab.on('shown.bs.tab', function(){
+			refreshCharts(data);
 		});
-
+		if (refresh && statsTab.hasClass('active')) {
+			console.log('refreshing');
+			refreshCharts(data);
+		}
+		let ranks = data['body']['ranks'];
 		let firstLoad = true;
 		$('#ranksGrid').jsGrid({
 			width: '100%',
@@ -108,13 +116,13 @@ function loadData(time) {
 
 $(document).ready(function() {
 	checkAdBlocker();
-	loadData('1d');
+	loadData('1y');
 
 	$(".dropdown-menu a").click(function() {
 		$(".dropdown-menu a").removeClass('active');
 		$(this).addClass('active');
 		let time = $(this).data('value');
-		loadData(time);
+		loadData(time, true);
 	});
 	$(window).scroll(function () {
 		if ($(this).scrollTop() > 50) {
