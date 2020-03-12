@@ -28,11 +28,19 @@ function refreshCharts(data) {
 				xAxes: [{
 					gridLines: {
 						color: '#d9d9d9'
+					},
+					scaleLabel: {
+						display: true,
+						labelString: 'Timeline'
 					}
 				}],
 				yAxes: [{
 					gridLines: {
 						color: '#d9d9d9'
+					},
+					scaleLabel: {
+						display: true,
+						labelString: 'Number of Votes'
 					}
 				}]
 			}
@@ -44,6 +52,18 @@ function refreshCharts(data) {
 		options: {
 			responsive: true,
 			maintainAspectRatio: false
+		}
+	});
+}
+
+function refreshREADME() {
+	$.ajax({
+		url: 'https://raw.githubusercontent.com/Brandawg93/Botranks/master/README.md',
+		success: function(data) {
+			let converter = new showdown.Converter(),
+				text      = data,
+				html      = converter.makeHtml(text);
+			$("#README").html(html);
 		}
 	});
 }
@@ -121,8 +141,13 @@ $(document).ready(function() {
 	checkAdBlocker();
 	loadData('1y');
 
+	let aboutTab = $('.nav-pills #aboutTab');
+	aboutTab.on('shown.bs.tab', function(){
+		refreshREADME();
+	});
+
 	$('.dropdown-menu a').click(function() {
-		$(".dropdown-menu a").removeClass('active');
+		$('.dropdown-menu a').removeClass('active');
 		$(this).addClass('active');
 		let time = $(this).data('value');
 		loadData(time, true);

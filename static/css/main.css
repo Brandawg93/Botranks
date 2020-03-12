@@ -3,15 +3,10 @@
         background-color: black;
     }
 
-    #headerTitle {
-        color: white;
-    }
-
-    footer {
-        color: white;
-    }
-
-    #grid-loader {
+    #headerTitle,
+    footer,
+    #grid-loader,
+    #README {
         color: white;
     }
 

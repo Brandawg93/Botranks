@@ -1,6 +1,7 @@
 import flask
 import boto3
 import datetime
+import calendar
 from boto3.dynamodb.conditions import Attr
 from itertools import groupby
 from math import sqrt
@@ -17,7 +18,9 @@ def index():
 
 def calculate_score(good_bots, bad_bots):
     """Calculate the bot score."""
-    score = round(((good_bots + 1.9208) / (good_bots + bad_bots) - 1.96 * sqrt((good_bots * bad_bots) / (good_bots + bad_bots) + 0.9604) / (good_bots + bad_bots)) / (1 + 3.8416 / (good_bots + bad_bots)),4)
+    score = round(((good_bots + 1.9208) / (good_bots + bad_bots) - 1.96 * sqrt(
+        (good_bots * bad_bots) / (good_bots + bad_bots) + 0.9604) / (good_bots + bad_bots)) / (
+                              1 + 3.8416 / (good_bots + bad_bots)), 4)
     return score
 
 
@@ -33,19 +36,19 @@ def get_epoch(after):
     if l_type == 'd':
         tdelta = datetime.timedelta(days=length)
     if l_type == 'w':
-        tdelta = datetime.timedelta(days=length*7)
+        tdelta = datetime.timedelta(days=length * 7)
     if l_type == 'M':
-        tdelta = datetime.timedelta(days=length*30)
+        tdelta = datetime.timedelta(days=length * 30)
     if l_type == 'y':
-        tdelta = datetime.timedelta(days=length*365)
+        tdelta = datetime.timedelta(days=length * 365)
     return int((datetime.datetime.now() - tdelta).strftime('%s'))
 
 
 @app.route('/api/getranks')
-def lambda_handler():
+def get_ranks():
     after = flask.request.args.get('after')
     if not after:
-        after = '1d'
+        after = '1y'
     db_table = 'Votes'
     epoch = get_epoch(after)
     table = dynamodb.Table(db_table)
@@ -93,36 +96,44 @@ def lambda_handler():
     votes = {
         'labels': [],
         'datasets':
-        [
-            {
-                'label': 'Bad Bot Votes',
-                'data': [],
-                'backgroundColor': 'rgba(255, 0, 0, 1)'
-            },
-            {
-                'label': 'Good Bot Votes',
-                'data': [],
-                'backgroundColor': 'rgba(0, 0, 255, 1)'
-            },
-            {
-                'label': 'Total Votes',
-                'data': [],
-                'backgroundColor': 'rgba(128, 0, 128, 1)'
-            }
+            [
+                {
+                    'label': 'Bad Bot Votes',
+                    'data': [],
+                    'backgroundColor': 'rgba(255, 0, 0, 1)'
+                },
+                {
+                    'label': 'Good Bot Votes',
+                    'data': [],
+                    'backgroundColor': 'rgba(0, 0, 255, 1)'
+                },
+                {
+                    'label': 'Total Votes',
+                    'data': [],
+                    'backgroundColor': 'rgba(128, 0, 128, 1)'
+                }
 
-        ]
+            ]
     }
     pie = {
         'labels': ['Good Bot Votes', 'Bad Bot Votes'],
         'datasets':
-        [
-            {
-                'data': [total_gb, total_bb],
-                'backgroundColor': ['rgba(0, 255, 0, 1)', 'rgba(255, 0, 0, 1)']
-            }
-        ]
+            [
+                {
+                    'data': [total_gb, total_bb],
+                    'backgroundColor': ['rgba(0, 255, 0, 1)', 'rgba(255, 0, 0, 1)']
+                }
+            ]
     }
-    for key, group in groupby(items, key=lambda x: x['datetime'].hour):
+    if 'd' in after:
+        group_by = groupby(items, key=lambda x: x['datetime'].hour)
+    elif 'w' in after:
+        group_by = groupby(items, key=lambda x: calendar.day_name[x['datetime'].weekday()])
+    elif 'M' in after:
+        group_by = groupby(items, key=lambda x: x['datetime'].day)
+    else:
+        group_by = groupby(items, key=lambda x: calendar.month_name[x['datetime'].month])
+    for key, group in group_by:
         votes['labels'].append(key)
         lst = list(group)
         good_count = 0

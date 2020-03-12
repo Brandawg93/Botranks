@@ -18,7 +18,8 @@
         <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css')}}">
 
-        <script data-ad-client="ca-pub-6473000979656682" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+{#        <script data-ad-client="ca-pub-6473000979656682" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>#}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
         <script
 		  src="https://code.jquery.com/jquery-3.4.1.min.js"
 		  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
@@ -42,6 +43,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" data-toggle="tab" id="statsTab" href="#stats">Stats</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" id="aboutTab" href="#about">About</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav ml-auto">
@@ -73,7 +77,7 @@
                     </div>
                 </div>
             </div>
-            <div id="stats" class="tab-pane fade">
+            <div id="stats" class="tab-pane fade in">
                 <div class="container">
                     <div class="row">
                         <div class="col-md" id="votesContainer">
@@ -83,6 +87,15 @@
                     <div class="row">
                         <div class="col-md" id="pieContainer">
                             <canvas id="votesPie"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="about" class="tab-pane fade in">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md">
+                            <div id="README"></div>
                         </div>
                     </div>
                 </div>
