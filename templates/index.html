@@ -78,15 +78,27 @@
                 </div>
             </div>
             <div id="stats" class="tab-pane fade in">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-md" id="votesContainer">
-                            <canvas id="votes"></canvas>
-                        </div>
+                <div class="container-fluid">
+                    <div class="text-center">
+                        <h1 class="stats-header">Votes Timeline</h1>
+                        <hr/>
                     </div>
                     <div class="row">
-                        <div class="col-md" id="pieContainer">
+                        <div class="col-lg-10" id="votesContainer">
+                            <canvas id="votes"></canvas>
+                        </div>
+                        <div class="col-lg-2" id="pieContainer">
                             <canvas id="votesPie"></canvas>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="text-center">
+                        <h1 class="stats-header text-center">Top 5's</h1>
+                        <hr/>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg" id="topBotsContainer">
+                            <canvas id="topBots"></canvas>
                         </div>
                     </div>
                 </div>

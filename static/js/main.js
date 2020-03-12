@@ -16,9 +16,11 @@ let getUrlParameter = function getUrlParameter(sParam) {
 function refreshCharts(data) {
 	let votes = data['body']['votes'];
 	let pie = data['body']['pie'];
+	let topBots = data['body']['top_bots'];
 	let ctx = document.getElementById('votes').getContext('2d');
 	let ctxPie = document.getElementById('votesPie').getContext('2d');
-	let myLineChart = new Chart(ctx, {
+	let ctxTopBots = document.getElementById('topBots').getContext('2d');
+	new Chart(ctx, {
 		type: 'line',
 		data: votes,
 		options: {
@@ -46,9 +48,17 @@ function refreshCharts(data) {
 			}
 		}
 	});
-	let myDoughnutChart = new Chart(ctxPie, {
+	new Chart(ctxPie, {
 		type: 'doughnut',
 		data: pie,
+		options: {
+			responsive: true,
+			maintainAspectRatio: false
+		}
+	});
+	new Chart(ctxTopBots, {
+		type: 'polarArea',
+		data: topBots,
 		options: {
 			responsive: true,
 			maintainAspectRatio: false

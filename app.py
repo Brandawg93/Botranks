@@ -9,6 +9,8 @@ from math import sqrt
 app = flask.Flask(__name__, static_folder='static', static_url_path='')
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 
+MINVOTES = 2
+
 
 @app.route('/')
 def index():
@@ -75,17 +77,17 @@ def get_ranks():
                 comment_karma = vote['comment_karma']
             if vote['link_karma'] > link_karma:
                 link_karma = vote['link_karma']
-
-        ranks.append(
-            {
-                'bot': key,
-                'score': calculate_score(good_bots, bad_bots),
-                'good_bots': good_bots,
-                'bad_bots': bad_bots,
-                'comment_karma': int(comment_karma),
-                'link_karma': int(link_karma)
-            }
-        )
+        if good_bots + bad_bots >= MINVOTES:
+            ranks.append(
+                {
+                    'bot': key,
+                    'score': calculate_score(good_bots, bad_bots),
+                    'good_bots': good_bots,
+                    'bad_bots': bad_bots,
+                    'comment_karma': int(comment_karma),
+                    'link_karma': int(link_karma)
+                }
+            )
     ranks.sort(key=lambda x: x['score'], reverse=True)
     for count, _ in enumerate(ranks):
         ranks[count]['rank'] = count + 1
@@ -125,6 +127,19 @@ def get_ranks():
                 }
             ]
     }
+    top_bots = {
+        'labels': [],
+        'datasets':
+            [
+                {
+                    'data': [],
+                    'backgroundColor': ['rgba(0, 255, 0, 1)', 'rgba(255, 0, 0, 1)', 'rgba(0, 0, 255, 1)', 'rgba(255, 255, 0, 1)', 'rgba(255, 0, 255, 1)']
+                }
+            ]
+    }
+    for bot in ranks[:5]:
+        top_bots['labels'].append(bot['bot'])
+        top_bots['datasets'][0]['data'].append(round((bot['good_bots'] + 1) / (bot['bad_bots'] + 1), 2))
     if 'd' in after:
         group_by = groupby(items, key=lambda x: x['datetime'].hour)
     elif 'w' in after:
@@ -150,7 +165,8 @@ def get_ranks():
     response = {
         'ranks': ranks,
         'votes': votes,
-        'pie': pie
+        'pie': pie,
+        'top_bots': top_bots
     }
     return {
         "isBase64Encoded": False,
