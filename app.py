@@ -6,7 +6,7 @@ from boto3.dynamodb.conditions import Attr
 from itertools import groupby
 from math import sqrt
 
-app = flask.Flask(__name__)
+app = flask.Flask(__name__, static_folder='static', static_url_path='')
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 
 
