@@ -93,7 +93,31 @@ def get_ranks():
         ranks[count]['rank'] = count + 1
     for item in items:
         item['datetime'] = datetime.datetime.fromtimestamp(item['timestamp'])
+        if 'subreddit' not in item:
+            item['subreddit'] = 'NA'
 
+    items.sort(key=lambda x: x['subreddit'])
+    top_subs = {
+        'labels': [],
+        'datasets':
+            [
+                {
+                    'data': [],
+                    'backgroundColor': ['rgba(0, 255, 0, 1)', 'rgba(255, 0, 0, 1)', 'rgba(0, 0, 255, 1)', 'rgba(255, 255, 0, 1)', 'rgba(255, 0, 255, 1)']
+                }
+            ]
+    }
+    subs = []
+    for key, group in groupby(items, key=lambda x: x['subreddit']):
+        if key and key != 'NA':
+            subs.append({
+                'labels': key,
+                'data': len(list(group))
+            })
+    subs.sort(key=lambda x: x['data'], reverse=True)
+    for sub in subs[:5]:
+        top_subs['labels'].append(sub['labels'])
+        top_subs['datasets'][0]['data'].append(sub['data'])
     items.sort(key=lambda x: x['timestamp'])
     votes = {
         'labels': [],
@@ -166,7 +190,8 @@ def get_ranks():
         'ranks': ranks,
         'votes': votes,
         'pie': pie,
-        'top_bots': top_bots
+        'top_bots': top_bots,
+        'top_subs': top_subs
     }
     return {
         "isBase64Encoded": False,

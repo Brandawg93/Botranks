@@ -73,7 +73,8 @@
     height: 30vh;
 }
 
-#topBotsContainer {
+#topBotsContainer,
+#topSubsContainer {
     height: 45vh;
 }
 

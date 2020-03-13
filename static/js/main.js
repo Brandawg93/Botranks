@@ -17,9 +17,11 @@ function refreshCharts(data) {
 	let votes = data['body']['votes'];
 	let pie = data['body']['pie'];
 	let topBots = data['body']['top_bots'];
+	let topSubs = data['body']['top_subs'];
 	let ctx = document.getElementById('votes').getContext('2d');
 	let ctxPie = document.getElementById('votesPie').getContext('2d');
 	let ctxTopBots = document.getElementById('topBots').getContext('2d');
+	let ctxSubsBots = document.getElementById('topSubs').getContext('2d');
 	new Chart(ctx, {
 		type: 'line',
 		data: votes,
@@ -56,13 +58,24 @@ function refreshCharts(data) {
 			maintainAspectRatio: false
 		}
 	});
+	let polarOptions = {
+			scale: {
+				gridLines: {
+					color: '#d9d9d9'
+				}
+			},
+			responsive: true,
+			maintainAspectRatio: false
+		};
 	new Chart(ctxTopBots, {
 		type: 'polarArea',
 		data: topBots,
-		options: {
-			responsive: true,
-			maintainAspectRatio: false
-		}
+		options: polarOptions
+	});
+	new Chart(ctxSubsBots, {
+		type: 'polarArea',
+		data: topSubs,
+		options: polarOptions
 	});
 }
 
