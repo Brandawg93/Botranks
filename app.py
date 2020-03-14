@@ -46,18 +46,65 @@ def get_epoch(after):
     return int((datetime.datetime.now() - tdelta).strftime('%s'))
 
 
-@app.route('/api/getranks')
-def get_ranks():
-    after = flask.request.args.get('after')
-    if not after:
-        after = '1y'
+def get_items_from_db(after):
     db_table = 'Votes'
     epoch = get_epoch(after)
     table = dynamodb.Table(db_table)
     response = table.scan(
         FilterExpression=Attr('timestamp').gt(epoch)
     )
-    items = response['Items']
+    return response['Items']
+
+
+@app.route('/api/getrank')
+def get_bot_rank():
+    bot = flask.request.args.get('bot')
+    if bot:
+        items = get_items_from_db('1y')
+        ranks = []
+        for key, group in groupby(items, key=lambda x: x['bot']):
+            good_bots = 0
+            bad_bots = 0
+            for vote in group:
+                if vote['vote'] == 'G':
+                    good_bots += 1
+                if vote['vote'] == 'B':
+                    bad_bots += 1
+            if good_bots + bad_bots >= MINVOTES:
+                ranks.append(
+                    {
+                        'bot': key,
+                        'score': calculate_score(good_bots, bad_bots),
+                        'good_bots': good_bots,
+                        'bad_bots': bad_bots
+                    }
+                )
+        ranks.sort(key=lambda x: x['score'], reverse=True)
+        for count, _ in enumerate(ranks):
+            ranks[count]['rank'] = count + 1
+        rank = [x for x in ranks if x['bot'] == bot]
+        return {
+            "isBase64Encoded": False,
+            "statusCode": 200,
+            "headers": {},
+            "multiValueHeaders": {},
+            "body": rank[0] if len(rank) > 0 else None
+        }
+    return {
+        "isBase64Encoded": False,
+        "statusCode": 400,
+        "headers": {},
+        "multiValueHeaders": {},
+        "body": "Please specify a bot"
+    }
+
+
+@app.route('/api/getranks')
+def get_ranks():
+    after = flask.request.args.get('after')
+    if not after:
+        after = '1y'
+    items = get_items_from_db(after)
     ranks = []
     total_gb = 0
     total_bb = 0
