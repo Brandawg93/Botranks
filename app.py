@@ -4,6 +4,7 @@ import datetime
 import calendar
 from boto3.dynamodb.conditions import Attr
 from itertools import groupby
+from functools import reduce
 from math import sqrt
 
 app = flask.Flask(__name__, static_folder='static', static_url_path='')
@@ -63,13 +64,9 @@ def get_bot_rank():
         items = get_items_from_db('1y')
         ranks = []
         for key, group in groupby(items, key=lambda x: x['bot']):
-            good_bots = 0
-            bad_bots = 0
-            for vote in group:
-                if vote['vote'] == 'G':
-                    good_bots += 1
-                if vote['vote'] == 'B':
-                    bad_bots += 1
+            group_lst = list(group)
+            good_bots = len(list(filter(lambda x: x['vote'] == 'G', group_lst)))
+            bad_bots = len(list(filter(lambda x: x['vote'] == 'B', group_lst)))
             if good_bots + bad_bots >= MINVOTES:
                 ranks.append(
                     {
@@ -109,21 +106,13 @@ def get_ranks():
     total_gb = 0
     total_bb = 0
     for key, group in groupby(items, key=lambda x: x['bot']):
-        good_bots = 0
-        bad_bots = 0
-        comment_karma = 0
-        link_karma = 0
-        for vote in group:
-            if vote['vote'] == 'G':
-                good_bots += 1
-                total_gb += 1
-            if vote['vote'] == 'B':
-                bad_bots += 1
-                total_bb += 1
-            if vote['comment_karma'] > comment_karma:
-                comment_karma = vote['comment_karma']
-            if vote['link_karma'] > link_karma:
-                link_karma = vote['link_karma']
+        group_lst = list(group)
+        good_bots = len(list(filter(lambda x: x['vote'] == 'G', group_lst)))
+        bad_bots = len(list(filter(lambda x: x['vote'] == 'B', group_lst)))
+        total_gb += good_bots
+        total_bb += bad_bots
+        comment_karma = max(x['comment_karma'] for x in group_lst)
+        link_karma = max(x['link_karma'] for x in group_lst)
         if good_bots + bad_bots >= MINVOTES:
             ranks.append(
                 {
@@ -221,17 +210,12 @@ def get_ranks():
         group_by = groupby(items, key=lambda x: calendar.month_name[x['datetime'].month])
     for key, group in group_by:
         votes['labels'].append(key)
-        lst = list(group)
-        good_count = 0
-        bad_count = 0
-        for item in lst:
-            if item['vote'] == 'G':
-                good_count += 1
-            if item['vote'] == 'B':
-                bad_count += 1
-        votes['datasets'][2]['data'].append(len(lst))
-        votes['datasets'][1]['data'].append(good_count)
-        votes['datasets'][0]['data'].append(bad_count)
+        group_lst = list(group)
+        good_bots = len(list(filter(lambda x: x['vote'] == 'G', group_lst)))
+        bad_bots = len(list(filter(lambda x: x['vote'] == 'B', group_lst)))
+        votes['datasets'][2]['data'].append(len(group_lst))
+        votes['datasets'][1]['data'].append(good_bots)
+        votes['datasets'][0]['data'].append(bad_bots)
 
     response = {
         'ranks': ranks,
