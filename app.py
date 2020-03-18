@@ -4,7 +4,6 @@ import datetime
 import calendar
 from boto3.dynamodb.conditions import Attr
 from itertools import groupby
-from functools import reduce
 from math import sqrt
 
 app = flask.Flask(__name__, static_folder='static', static_url_path='')
@@ -62,23 +61,7 @@ def get_bot_rank():
     bot = flask.request.args.get('bot')
     if bot:
         items = get_items_from_db('1y')
-        ranks = []
-        for key, group in groupby(items, key=lambda x: x['bot']):
-            group_lst = list(group)
-            good_bots = len(list(filter(lambda x: x['vote'] == 'G', group_lst)))
-            bad_bots = len(list(filter(lambda x: x['vote'] == 'B', group_lst)))
-            if good_bots + bad_bots >= MINVOTES:
-                ranks.append(
-                    {
-                        'bot': key,
-                        'score': calculate_score(good_bots, bad_bots),
-                        'good_bots': good_bots,
-                        'bad_bots': bad_bots
-                    }
-                )
-        ranks.sort(key=lambda x: x['score'], reverse=True)
-        for count, _ in enumerate(ranks):
-            ranks[count]['rank'] = count + 1
+        ranks = get_ranks(items)
         rank = [x for x in ranks if x['bot'] == bot]
         return {
             "isBase64Encoded": False,
@@ -96,21 +79,12 @@ def get_bot_rank():
     }
 
 
-@app.route('/api/getranks')
-def get_ranks():
-    after = flask.request.args.get('after')
-    if not after:
-        after = '1y'
-    items = get_items_from_db(after)
+def get_ranks(items):
     ranks = []
-    total_gb = 0
-    total_bb = 0
     for key, group in groupby(items, key=lambda x: x['bot']):
         group_lst = list(group)
         good_bots = len(list(filter(lambda x: x['vote'] == 'G', group_lst)))
         bad_bots = len(list(filter(lambda x: x['vote'] == 'B', group_lst)))
-        total_gb += good_bots
-        total_bb += bad_bots
         comment_karma = max(x['comment_karma'] for x in group_lst)
         link_karma = max(x['link_karma'] for x in group_lst)
         if good_bots + bad_bots >= MINVOTES:
@@ -127,11 +101,10 @@ def get_ranks():
     ranks.sort(key=lambda x: x['score'], reverse=True)
     for count, _ in enumerate(ranks):
         ranks[count]['rank'] = count + 1
-    for item in items:
-        item['datetime'] = datetime.datetime.fromtimestamp(item['timestamp'])
-        if 'subreddit' not in item:
-            item['subreddit'] = 'NA'
+    return ranks
 
+
+def get_top_subs(items):
     items.sort(key=lambda x: x['subreddit'])
     top_subs = {
         'labels': [],
@@ -154,6 +127,39 @@ def get_ranks():
     for sub in subs[:5]:
         top_subs['labels'].append(sub['labels'])
         top_subs['datasets'][0]['data'].append(sub['data'])
+    return top_subs
+
+
+def get_top_bots(items):
+    top_bots = {
+        'labels': [],
+        'datasets':
+            [
+                {
+                    'data': [],
+                    'backgroundColor': ['rgba(0, 255, 0, 1)', 'rgba(255, 0, 0, 1)', 'rgba(0, 0, 255, 1)', 'rgba(255, 255, 0, 1)', 'rgba(255, 0, 255, 1)']
+                }
+            ]
+    }
+    for bot in items:
+        top_bots['labels'].append(bot['bot'])
+        top_bots['datasets'][0]['data'].append(round((bot['good_bots'] + 1) / (bot['bad_bots'] + 1), 2))
+    return top_bots
+
+
+@app.route('/api/getdata')
+def get_data():
+    after = flask.request.args.get('after')
+    if not after:
+        after = '1y'
+    items = get_items_from_db(after)
+    ranks = get_ranks(items)
+    for item in items:
+        item['datetime'] = datetime.datetime.fromtimestamp(item['timestamp'])
+        if 'subreddit' not in item:
+            item['subreddit'] = 'NA'
+
+    top_subs = get_top_subs(items)
     items.sort(key=lambda x: x['timestamp'])
     votes = {
         'labels': [],
@@ -177,6 +183,8 @@ def get_ranks():
 
             ]
     }
+    total_gb = len(list(filter(lambda x: x['vote'] == 'G', items)))
+    total_bb = len(list(filter(lambda x: x['vote'] == 'B', items)))
     pie = {
         'labels': ['Good Bot Votes', 'Bad Bot Votes'],
         'datasets':
@@ -187,19 +195,7 @@ def get_ranks():
                 }
             ]
     }
-    top_bots = {
-        'labels': [],
-        'datasets':
-            [
-                {
-                    'data': [],
-                    'backgroundColor': ['rgba(0, 255, 0, 1)', 'rgba(255, 0, 0, 1)', 'rgba(0, 0, 255, 1)', 'rgba(255, 255, 0, 1)', 'rgba(255, 0, 255, 1)']
-                }
-            ]
-    }
-    for bot in ranks[:5]:
-        top_bots['labels'].append(bot['bot'])
-        top_bots['datasets'][0]['data'].append(round((bot['good_bots'] + 1) / (bot['bad_bots'] + 1), 2))
+    top_bots = get_top_bots(ranks[:5])
     if 'd' in after:
         group_by = groupby(items, key=lambda x: x['datetime'].hour)
     elif 'w' in after:

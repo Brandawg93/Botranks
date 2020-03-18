@@ -104,7 +104,7 @@ function checkAdBlocker() {
 }
 
 function loadData(time, refresh=false) {
-	$.getJSON( 'api/getranks?after=' + time, function( data ) {
+	$.getJSON( 'api/getdata?after=' + time, function( data ) {
 		$('#grid-loader').remove();
 		let statsTab = $('.nav-pills #statsTab');
 		statsTab.on('shown.bs.tab', function(){
