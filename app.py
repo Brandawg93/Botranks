@@ -2,17 +2,21 @@ import flask
 import boto3
 import datetime
 import calendar
+from flask_caching import Cache
 from boto3.dynamodb.conditions import Attr
 from itertools import groupby
 from math import sqrt
 
+cache = Cache(config={'CACHE_TYPE': 'simple'})
 app = flask.Flask(__name__, static_folder='static', static_url_path='')
+cache.init_app(app)
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 
 MINVOTES = 2
 
 
 @app.route('/')
+@cache.cached(timeout=60)
 def index():
     """Displays the index page accessible at '/'."""
     return flask.render_template('index.html')
@@ -46,6 +50,7 @@ def get_epoch(after):
     return int((datetime.datetime.now() - tdelta).strftime('%s'))
 
 
+@cache.memoize(timeout=60)
 def get_items_from_db(after):
     db_table = 'Votes'
     epoch = get_epoch(after)
