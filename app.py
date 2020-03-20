@@ -55,10 +55,22 @@ def get_items_from_db(after):
     db_table = 'Votes'
     epoch = get_epoch(after)
     table = dynamodb.Table(db_table)
-    response = table.scan(
-        FilterExpression=Attr('timestamp').gt(epoch)
-    )
-    return response['Items']
+    items = cache.get('items')
+    last_update = cache.get('last_update')
+
+    if items:
+        response = table.scan(
+            FilterExpression=Attr('timestamp').gt(last_update)
+        )
+        items += response['Items']
+    else:
+        response = table.scan()
+        items = response['Items']
+
+    last_update = int((datetime.datetime.now()).strftime('%s'))
+    cache.set('last_update', last_update)
+    cache.set('items', items)
+    return list(filter(lambda x: x['timestamp'] > epoch, items))
 
 
 @app.route('/api/getrank')
