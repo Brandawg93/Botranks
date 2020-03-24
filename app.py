@@ -66,6 +66,9 @@ def get_items_from_db(after):
     else:
         response = table.scan()
         items = response['Items']
+        while response.get('LastEvaluatedKey'):
+            response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+            items.extend(response['Items'])
 
     last_update = int((datetime.datetime.now()).strftime('%s'))
     cache.set('last_update', last_update)
