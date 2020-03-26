@@ -132,7 +132,13 @@ def get_top_subs(items):
             [
                 {
                     'data': [],
-                    'backgroundColor': ['rgba(0, 255, 0, 1)', 'rgba(255, 0, 0, 1)', 'rgba(0, 0, 255, 1)', 'rgba(255, 255, 0, 1)', 'rgba(255, 0, 255, 1)']
+                    'backgroundColor': [
+                        'rgba(0, 255, 0, 1)',
+                        'rgba(255, 0, 0, 1)',
+                        'rgba(0, 0, 255, 1)',
+                        'rgba(255, 255, 0, 1)',
+                        'rgba(255, 0, 255, 1)'
+                    ]
                 }
             ]
     }
@@ -157,7 +163,13 @@ def get_top_bots(items):
             [
                 {
                     'data': [],
-                    'backgroundColor': ['rgba(0, 255, 0, 1)', 'rgba(255, 0, 0, 1)', 'rgba(0, 0, 255, 1)', 'rgba(255, 255, 0, 1)', 'rgba(255, 0, 255, 1)']
+                    'backgroundColor': [
+                        'rgba(0, 255, 0, 1)',
+                        'rgba(255, 0, 0, 1)',
+                        'rgba(0, 0, 255, 1)',
+                        'rgba(255, 255, 0, 1)',
+                        'rgba(255, 0, 255, 1)'
+                    ]
                 }
             ]
     }
