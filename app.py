@@ -1,6 +1,8 @@
-import boto3
+import aioboto3
 import datetime
 import calendar
+from aiocache import cached
+from aiocache.serializers import PickleSerializer
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -12,7 +14,6 @@ from math import sqrt
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 cached_items = {}
 
 MINVOTES = 2
@@ -56,25 +57,27 @@ def get_epoch(after):
     return int((datetime.datetime.now() - tdelta).strftime('%s'))
 
 
-def get_items_from_db(after):
+@cached(ttl=60, serializer=PickleSerializer())
+async def get_items_from_db(after):
     global cached_items
     db_table = 'Votes'
     epoch = get_epoch(after)
-    table = dynamodb.Table(db_table)
     items = cached_items.get('items')
     last_update = cached_items.get('last_update')
 
-    if items:
-        response = table.scan(
-            FilterExpression=Attr('timestamp').gt(last_update)
-        )
-        items += response['Items']
-    else:
-        response = table.scan()
-        items = response['Items']
-        while response.get('LastEvaluatedKey'):
-            response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
-            items.extend(response['Items'])
+    async with aioboto3.resource('dynamodb', region_name='us-east-1', verify=False) as dynamodb:
+        table = dynamodb.Table(db_table)
+        if items:
+            response = await table.scan(
+                FilterExpression=Attr('timestamp').gt(last_update)
+            )
+            items += response['Items']
+        else:
+            response = await table.scan()
+            items = response['Items']
+            while response.get('LastEvaluatedKey'):
+                response = await table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+                items.extend(response['Items'])
 
     last_update = int((datetime.datetime.now()).strftime('%s'))
     cached_items['last_update'] = last_update
@@ -86,8 +89,8 @@ def get_items_from_db(after):
 async def get_bot_rank(request: Request):
     bot = request.query_params['bot']
     if bot:
-        items = get_items_from_db('1y')
-        ranks = get_ranks(items)
+        items = await get_items_from_db('1y')
+        ranks = await get_ranks(items)
         rank = [x for x in ranks if x['bot'] == bot]
         return {
             "statusCode": 200,
@@ -99,7 +102,7 @@ async def get_bot_rank(request: Request):
     }
 
 
-def get_ranks(items):
+async def get_ranks(items):
     ranks = []
     for key, group in groupby(items, key=lambda x: x['bot']):
         group_lst = list(group)
@@ -124,7 +127,7 @@ def get_ranks(items):
     return ranks
 
 
-def get_top_subs(items):
+async def get_top_subs(items):
     items.sort(key=lambda x: x['subreddit'])
     top_subs = {
         'labels': [],
@@ -156,7 +159,7 @@ def get_top_subs(items):
     return top_subs
 
 
-def get_top_bots(items):
+async def get_top_bots(items):
     top_bots = {
         'labels': [],
         'datasets':
@@ -184,14 +187,14 @@ async def get_data(request: Request):
     after = request.query_params['after']
     if not after:
         after = '1y'
-    items = get_items_from_db(after)
-    ranks = get_ranks(items)
+    items = await get_items_from_db(after)
+    ranks = await get_ranks(items)
     for item in items:
         item['datetime'] = datetime.datetime.fromtimestamp(item['timestamp'])
         if 'subreddit' not in item:
             item['subreddit'] = 'NA'
 
-    top_subs = get_top_subs(items)
+    top_subs = await get_top_subs(items)
     items.sort(key=lambda x: x['timestamp'])
     votes = {
         'labels': [],
@@ -227,7 +230,7 @@ async def get_data(request: Request):
                 }
             ]
     }
-    top_bots = get_top_bots(ranks[:5])
+    top_bots = await get_top_bots(ranks[:5])
     if 'd' in after:
         group_by = groupby(items, key=lambda x: x['datetime'].hour)
     elif 'w' in after:

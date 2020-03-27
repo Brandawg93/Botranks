@@ -1,5 +1,7 @@
 fastapi
 boto3
+aioboto3
+aiocache
 uvicorn
 jinja2
 aiofiles
