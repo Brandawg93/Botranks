@@ -1,25 +1,31 @@
-import flask
 import boto3
 import datetime
 import calendar
-from flask_caching import Cache
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import FileResponse
 from boto3.dynamodb.conditions import Attr
 from itertools import groupby
 from math import sqrt
 
-cache = Cache(config={'CACHE_TYPE': 'simple'})
-app = flask.Flask(__name__, static_folder='static', static_url_path='')
-cache.init_app(app)
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+cached_items = {}
 
 MINVOTES = 2
 
 
-@app.route('/')
-@cache.cached(timeout=60)
-def index():
-    """Displays the index page accessible at '/'."""
-    return flask.render_template('index.html')
+@app.get("/robots.txt")
+async def robots():
+    return FileResponse("static/robots.txt")
+
+
+@app.get("/")
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 def calculate_score(good_bots, bad_bots):
@@ -50,13 +56,13 @@ def get_epoch(after):
     return int((datetime.datetime.now() - tdelta).strftime('%s'))
 
 
-@cache.memoize(timeout=60)
 def get_items_from_db(after):
+    global cached_items
     db_table = 'Votes'
     epoch = get_epoch(after)
     table = dynamodb.Table(db_table)
-    items = cache.get('items')
-    last_update = cache.get('last_update')
+    items = cached_items.get('items')
+    last_update = cached_items.get('last_update')
 
     if items:
         response = table.scan(
@@ -71,30 +77,24 @@ def get_items_from_db(after):
             items.extend(response['Items'])
 
     last_update = int((datetime.datetime.now()).strftime('%s'))
-    cache.set('last_update', last_update)
-    cache.set('items', items)
+    cached_items['last_update'] = last_update
+    cached_items['items'] = items
     return list(filter(lambda x: x['timestamp'] > epoch, items))
 
 
-@app.route('/api/getrank')
-def get_bot_rank():
-    bot = flask.request.args.get('bot')
+@app.get('/api/getrank')
+async def get_bot_rank(request: Request):
+    bot = request.query_params['bot']
     if bot:
         items = get_items_from_db('1y')
         ranks = get_ranks(items)
         rank = [x for x in ranks if x['bot'] == bot]
         return {
-            "isBase64Encoded": False,
             "statusCode": 200,
-            "headers": {},
-            "multiValueHeaders": {},
             "body": rank[0] if len(rank) > 0 else None
         }
     return {
-        "isBase64Encoded": False,
         "statusCode": 400,
-        "headers": {},
-        "multiValueHeaders": {},
         "body": "Please specify a bot"
     }
 
@@ -179,9 +179,9 @@ def get_top_bots(items):
     return top_bots
 
 
-@app.route('/api/getdata')
-def get_data():
-    after = flask.request.args.get('after')
+@app.get('/api/getdata')
+async def get_data(request: Request):
+    after = request.query_params['after']
     if not after:
         after = '1y'
     items = get_items_from_db(after)
@@ -253,13 +253,6 @@ def get_data():
         'top_subs': top_subs
     }
     return {
-        "isBase64Encoded": False,
         "statusCode": 200,
-        "headers": {},
-        "multiValueHeaders": {},
         "body": response
     }
-
-
-if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=443)

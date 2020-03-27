@@ -1,3 +1,5 @@
-flask
-flask-caching
+fastapi
 boto3
+uvicorn
+jinja2
+aiofiles
