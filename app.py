@@ -3,7 +3,7 @@ import datetime
 import calendar
 from aiocache import cached
 from aiocache.serializers import PickleSerializer
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import FileResponse
@@ -85,20 +85,16 @@ async def get_items_from_db(after):
     return list(filter(lambda x: x['timestamp'] > epoch, items))
 
 
-@app.get('/api/getrank')
-async def get_bot_rank(request: Request):
-    bot = request.query_params['bot']
-    if bot:
-        items = await get_items_from_db('1y')
-        ranks = await get_ranks(items)
-        rank = [x for x in ranks if x['bot'] == bot]
-        return {
-            "statusCode": 200,
-            "body": rank[0] if len(rank) > 0 else None
-        }
+@app.get('/api/getrank/{bot}')
+async def get_bot_rank(bot: str):
+    items = await get_items_from_db('1y')
+    ranks = await get_ranks(items)
+    rank = [x for x in ranks if x['bot'] == bot]
+    if not rank:
+        raise HTTPException(status_code=404, detail="Bot not found")
     return {
-        "statusCode": 400,
-        "body": "Please specify a bot"
+        "statusCode": 200,
+        "body": rank[0] if len(rank) > 0 else None
     }
 
 
