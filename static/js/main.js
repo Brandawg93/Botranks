@@ -142,10 +142,10 @@ function loadData(time, refresh=false) {
 						}
 					}
 				}
-				$('.jsgrid-row, .jsgrid-alt-row').click(function() {
-					let bot = $(this).children()[1].innerHTML;
-					window.open('https://www.reddit.com/u/' + bot);
-				});
+			},
+			rowClick(e) {
+				let bot = e.item.bot;
+				window.open('https://www.reddit.com/u/' + bot);
 			},
 			fields: [
 				{ name: 'rank', title: 'Rank', type: 'number', width: 50 },
@@ -156,6 +156,15 @@ function loadData(time, refresh=false) {
 				{ name: 'comment_karma', title: 'Comment Karma', type: 'number', width: 75 },
 				{ name: 'link_karma', title: 'Link Karma', type: 'number', width: 75 }
 			]
+		}).data("JSGrid");
+
+		$('.searchbar').keyup(function() {
+			let val = $(this).val();
+			let filtered = $.grep( ranks, function( rank, i ) {
+				let bot = rank.bot.toLowerCase();
+				return bot.startsWith(val.toLowerCase());
+			});
+			$("#ranksGrid").jsGrid("option", "data", filtered);
 		});
 	});
 }

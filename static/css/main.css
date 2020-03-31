@@ -46,6 +46,10 @@
     .jsgrid-pager {
         color: white;
     }
+
+    .searchbar, .searchbar:focus {
+        background-color: black;
+    }
 }
 
 @media (prefers-color-scheme: light) {
@@ -109,4 +113,10 @@ hr {
         text-align: center;
         z-index: -1;
     }
+}
+
+.searchbar {
+    border: 0;
+    border-bottom: 1px solid #ced4da;
+    border-radius: 0;
 }
