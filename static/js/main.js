@@ -86,6 +86,7 @@ function refreshREADME() {
 			let converter = new showdown.Converter(),
 				text      = data,
 				html      = converter.makeHtml(text);
+			$('#about-loader').remove();
 			$('#README').html(html);
 		}
 	});
@@ -105,7 +106,7 @@ function checkAdBlocker() {
 
 function loadData(time, refresh=false) {
 	$.getJSON( 'api/getdata?after=' + time, function( data ) {
-		$('#grid-loader').remove();
+		// $('#grid-loader').remove();
 		let statsTab = $('.nav-pills #statsTab');
 		statsTab.on('shown.bs.tab', function(){
 			refreshCharts(data);
@@ -126,6 +127,7 @@ function loadData(time, refresh=false) {
 			onRefreshed() {
 				if (firstLoad) {
 					firstLoad = false;
+					$('.searchbar').show();
 					let bot = getUrlParameter('bot');
 					if (typeof bot !== 'undefined') {
 						let rank = ranks.find((x) => x['bot'] === bot);
