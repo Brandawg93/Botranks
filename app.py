@@ -16,7 +16,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 cached_items = {}
 
-MINVOTES = 2
+MINVOTES = 3
 
 
 @app.get("/robots.txt")
