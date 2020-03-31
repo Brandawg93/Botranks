@@ -106,7 +106,7 @@ function checkAdBlocker() {
 
 function loadData(time, refresh=false) {
 	$.getJSON( 'api/getdata?after=' + time, function( data ) {
-		// $('#grid-loader').remove();
+		$('#grid-loader').remove();
 		let statsTab = $('.nav-pills #statsTab');
 		statsTab.on('shown.bs.tab', function(){
 			refreshCharts(data);
