@@ -123,7 +123,9 @@ function loadData(time, refresh=false) {
 			sorting: true,
 			paging: true,
 			pageSize: 100,
+			pageButtonCount: 3,
 			data: ranks,
+			noDataContent: "Bot not found",
 			onRefreshed() {
 				if (firstLoad) {
 					firstLoad = false;

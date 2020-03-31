@@ -20,7 +20,8 @@
         background: #202020;
         color: white;
     }
-    .jsgrid-row>.jsgrid-cell {
+    .jsgrid-row>.jsgrid-cell,
+    .jsgrid-nodata-row>.jsgrid-cell {
         background: black;
     }
     .jsgrid-alt-row>.jsgrid-cell {
