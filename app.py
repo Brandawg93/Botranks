@@ -82,13 +82,13 @@ async def get_items_from_db(after='1y'):
             response = await table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
             items.extend(response['Items'])
 
-    last_key = {
-        'id': items[-1]['id'],
-        'bot': items[-1]['bot']
-    }
-    cached_items['last_key'] = last_key
-    cached_items['items'] = items
-    return list(filter(lambda x: x['timestamp'] > epoch, items))
+        last_key = {
+            'id': items[-1]['id'],
+            'bot': items[-1]['bot']
+        }
+        cached_items['last_key'] = last_key
+        cached_items['items'] = items
+        return list(filter(lambda x: x['timestamp'] > epoch, items))
 
 
 @app.get('/api/getrank/{bot}')
