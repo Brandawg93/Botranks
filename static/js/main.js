@@ -125,7 +125,7 @@ function loadData(time, refresh=false) {
 			pageSize: 100,
 			pageButtonCount: 3,
 			data: ranks,
-			noDataContent: "Bot not found",
+			noDataContent: 'Bot not found',
 			onRefreshed() {
 				if (firstLoad) {
 					firstLoad = false;
@@ -168,7 +168,7 @@ function loadData(time, refresh=false) {
 				let bot = rank.bot.toLowerCase();
 				return bot.startsWith(val.toLowerCase());
 			});
-			$("#ranksGrid").jsGrid("option", "data", filtered);
+			$('#ranksGrid').jsGrid('option', 'data', filtered);
 		});
 	});
 }

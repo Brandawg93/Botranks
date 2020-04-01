@@ -61,8 +61,9 @@ def get_epoch(after):
     return int((datetime.datetime.now() - tdelta).strftime('%s'))
 
 
+@app.on_event('startup')
 @cached(ttl=60, serializer=PickleSerializer())
-async def get_items_from_db(after):
+async def get_items_from_db(after='1y'):
     global cached_items
     db_table = 'Votes'
     epoch = get_epoch(after)
