@@ -1,8 +1,11 @@
 import aioboto3
 import datetime
 import calendar
+import asyncio
 from aiocache import cached
 from aiocache.serializers import PickleSerializer
+from timeloop import Timeloop
+from datetime import timedelta
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -13,8 +16,10 @@ from math import sqrt
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-cached_items = {}
+timer = Timeloop()
+cached_items = []
 
+UPDATE_INTERVAL = 600
 MINVOTES = 3
 
 
@@ -61,34 +66,41 @@ def get_epoch(after):
     return int((datetime.datetime.now() - tdelta).strftime('%s'))
 
 
+@timer.job(interval=timedelta(seconds=UPDATE_INTERVAL))
+def update_items():
+    """Run the process asynchronously on a timer."""
+    asyncio.run(update_items_from_db())
+
+
 @app.on_event('startup')
-@cached(ttl=60, serializer=PickleSerializer())
-async def get_items_from_db(after='1y'):
+async def start_timer():
+    await update_items_from_db()
+    timer.start(False)
+
+
+@app.on_event('shutdown')
+async def stop_timer():
+    timer.stop()
+
+
+async def update_items_from_db():
     global cached_items
     db_table = 'Votes'
-    epoch = get_epoch(after)
-    items = cached_items.get('items')
-    last_key = cached_items.get('last_key')
-
     async with aioboto3.resource('dynamodb', region_name='us-east-1', verify=False) as dynamodb:
         table = dynamodb.Table(db_table)
-        if last_key:
-            response = await table.scan(ExclusiveStartKey=last_key)
-            items.extend(response['Items'])
-        else:
-            response = await table.scan()
-            items = response['Items']
+        response = await table.scan()
+        items = response['Items']
         while response.get('LastEvaluatedKey'):
             response = await table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
             items.extend(response['Items'])
 
-        last_key = {
-            'id': items[-1]['id'],
-            'bot': items[-1]['bot']
-        }
-        cached_items['last_key'] = last_key
-        cached_items['items'] = items
-        return list(filter(lambda x: x['timestamp'] > epoch, items))
+        cached_items = items
+
+
+@cached(ttl=60, serializer=PickleSerializer())
+async def get_items_from_db(after='1y'):
+    epoch = get_epoch(after)
+    return list(filter(lambda x: x['timestamp'] > epoch, cached_items))
 
 
 @app.get('/api/getrank/{bot}')
