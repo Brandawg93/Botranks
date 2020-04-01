@@ -7,7 +7,6 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import FileResponse
-from boto3.dynamodb.conditions import Attr
 from itertools import groupby
 from math import sqrt
 
@@ -22,6 +21,11 @@ MINVOTES = 3
 @app.get("/robots.txt")
 async def robots():
     return FileResponse("static/robots.txt")
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    return FileResponse("static/favicon.ico")
 
 
 @app.get("/")
@@ -63,24 +67,25 @@ async def get_items_from_db(after):
     db_table = 'Votes'
     epoch = get_epoch(after)
     items = cached_items.get('items')
-    last_update = cached_items.get('last_update')
+    last_key = cached_items.get('last_key')
 
     async with aioboto3.resource('dynamodb', region_name='us-east-1', verify=False) as dynamodb:
         table = dynamodb.Table(db_table)
-        if items:
-            response = await table.scan(
-                FilterExpression=Attr('timestamp').gt(last_update)
-            )
-            items += response['Items']
+        if last_key:
+            response = await table.scan(ExclusiveStartKey=last_key)
+            items.extend(response['Items'])
         else:
             response = await table.scan()
             items = response['Items']
-            while response.get('LastEvaluatedKey'):
-                response = await table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
-                items.extend(response['Items'])
+        while response.get('LastEvaluatedKey'):
+            response = await table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+            items.extend(response['Items'])
 
-    last_update = int((datetime.datetime.now()).strftime('%s'))
-    cached_items['last_update'] = last_update
+    last_key = {
+        'id': items[-1]['id'],
+        'bot': items[-1]['bot']
+    }
+    cached_items['last_key'] = last_key
     cached_items['items'] = items
     return list(filter(lambda x: x['timestamp'] > epoch, items))
 
