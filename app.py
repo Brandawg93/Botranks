@@ -275,6 +275,13 @@ async def get_data(request: Request):
                     votes['datasets'][1]['data'].insert(count, 0)
                     votes['datasets'][0]['data'].insert(count, 0)
                     break
+                if count + 1 == len(votes['labels']) and label != 23:
+                    votes['labels'].append(label + 1)
+                    votes['datasets'][2]['data'].append(0)
+                    votes['datasets'][1]['data'].append(0)
+                    votes['datasets'][0]['data'].append(0)
+                    break
+
     response = {
         'ranks': ranks,
         'votes': votes,
