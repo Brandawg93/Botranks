@@ -13,7 +13,7 @@ let getUrlParameter = function getUrlParameter(sParam) {
     }
 };
 
-function refreshCharts(data) {
+function refreshCharts(data, time) {
 	let votes = data['body']['votes'];
 	let pie = data['body']['pie'];
 	let topBots = data['body']['top_bots'];
@@ -22,6 +22,39 @@ function refreshCharts(data) {
 	let ctxPie = document.getElementById('votesPie').getContext('2d');
 	let ctxTopBots = document.getElementById('topBots').getContext('2d');
 	let ctxSubsBots = document.getElementById('topSubs').getContext('2d');
+	let linePoint;
+	if (time.indexOf('d') > -1) {
+		linePoint = new Date().getHours();
+	} else if (time.indexOf('w') > -1) {
+		let d = new Date();
+		let weekday = new Array(7);
+		weekday[0] = "Sunday";
+		weekday[1] = "Monday";
+		weekday[2] = "Tuesday";
+		weekday[3] = "Wednesday";
+		weekday[4] = "Thursday";
+		weekday[5] = "Friday";
+		weekday[6] = "Saturday";
+		linePoint = weekday[d.getDay()];
+	} else if (time.indexOf('M') > -1) {
+		linePoint = new Date().getDate();
+	} else if (time.indexOf('y') > -1) {
+		let d = new Date();
+		let month = new Array(12);
+		month[0] = "January";
+		month[1] = "February";
+		month[2] = "March";
+		month[3] = "April";
+		month[4] = "May";
+		month[5] = "June";
+		month[6] = "July";
+		month[6] = "August";
+		month[6] = "September";
+		month[6] = "October";
+		month[6] = "November";
+		month[6] = "December";
+		linePoint = month[d.getMonth()];
+	}
 	new Chart(ctx, {
 		type: 'line',
 		data: votes,
@@ -47,6 +80,22 @@ function refreshCharts(data) {
 						labelString: 'Number of Votes'
 					}
 				}]
+			},
+			annotation: {
+				annotations: [
+					{
+						type: "line",
+						mode: "vertical",
+						scaleID: "x-axis-0",
+						value: linePoint,
+						borderColor: "red",
+						label: {
+							content: "Now",
+							enabled: true,
+							position: "top"
+						}
+					}
+				]
 			}
 		}
 	});
@@ -109,10 +158,10 @@ function loadData(time, refresh=false) {
 		$('#grid-loader').remove();
 		let statsTab = $('.nav-pills #statsTab');
 		statsTab.on('shown.bs.tab', function(){
-			refreshCharts(data);
+			refreshCharts(data, time);
 		});
 		if (refresh && statsTab.hasClass('active')) {
-			refreshCharts(data);
+			refreshCharts(data, time);
 		}
 		let ranks = data['body']['ranks'];
 		let firstLoad = true;
