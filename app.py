@@ -262,6 +262,21 @@ async def get_data(request: Request):
         votes['datasets'][1]['data'].append(good_bots)
         votes['datasets'][0]['data'].append(bad_bots)
 
+    # This fills empty values in the votes line graph
+    if 'd' in after:
+        while len(votes['labels']) < 24:
+            inserts = []
+            for count, label in enumerate(votes['labels']):
+                if count == 0 and votes['labels'][-1] != label - 1 and label > 0:
+                    inserts.append({'count': count, 'label': label - 1})
+                elif votes['labels'][count - 1] != label - 1 and label > 0:
+                    inserts.append({'count': count + 1, 'label': label - 1})
+            for insert in inserts:
+                votes['labels'].insert(insert['count'], insert['label'])
+                votes['datasets'][2]['data'].insert(insert['count'], 0)
+                votes['datasets'][1]['data'].insert(insert['count'], 0)
+                votes['datasets'][0]['data'].insert(insert['count'], 0)
+
     response = {
         'ranks': ranks,
         'votes': votes,
