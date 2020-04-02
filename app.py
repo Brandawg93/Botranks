@@ -209,7 +209,6 @@ async def get_data(request: Request):
             item['subreddit'] = 'NA'
 
     top_subs = await get_top_subs(items)
-    items.sort(key=lambda x: x['timestamp'])
     votes = {
         'labels': [],
         'datasets':
@@ -246,12 +245,16 @@ async def get_data(request: Request):
     }
     top_bots = await get_top_bots(ranks[:5])
     if 'd' in after:
+        items.sort(key=lambda x: x['datetime'].hour)
         group_by = groupby(items, key=lambda x: x['datetime'].hour)
     elif 'w' in after:
+        items.sort(key=lambda x: x['timestamp'])
         group_by = groupby(items, key=lambda x: calendar.day_name[x['datetime'].weekday()])
     elif 'M' in after:
+        items.sort(key=lambda x: x['datetime'].day)
         group_by = groupby(items, key=lambda x: x['datetime'].day)
     else:
+        items.sort(key=lambda x: x['timestamp'])
         group_by = groupby(items, key=lambda x: calendar.month_name[x['datetime'].month])
     for key, group in group_by:
         votes['labels'].append(key)
