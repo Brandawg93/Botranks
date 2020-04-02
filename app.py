@@ -267,7 +267,7 @@ async def get_data(request: Request):
 
     # This fills empty values in the votes line graph
     if 'd' in after:
-        while len(votes['labels']) < 24:
+        for _ in range(24 - len(votes['labels'])):
             for count, label in enumerate(votes['labels']):
                 if (count == 0 and votes['labels'][-1] != label - 1 and label > 0) or (votes['labels'][count - 1] != label - 1 and label > 0):
                     votes['labels'].insert(count, label - 1)
