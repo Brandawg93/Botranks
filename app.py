@@ -248,13 +248,13 @@ async def get_data(request: Request):
         items.sort(key=lambda x: x['datetime'].hour)
         group_by = groupby(items, key=lambda x: x['datetime'].hour)
     elif 'w' in after:
-        items.sort(key=lambda x: x['timestamp'])
+        items.sort(key=lambda x: x['datetime'].weekday())
         group_by = groupby(items, key=lambda x: calendar.day_name[x['datetime'].weekday()])
     elif 'M' in after:
         items.sort(key=lambda x: x['datetime'].day)
         group_by = groupby(items, key=lambda x: x['datetime'].day)
     else:
-        items.sort(key=lambda x: x['timestamp'])
+        items.sort(key=lambda x: x['datetime'].month)
         group_by = groupby(items, key=lambda x: calendar.month_name[x['datetime'].month])
     for key, group in group_by:
         votes['labels'].append(key)
