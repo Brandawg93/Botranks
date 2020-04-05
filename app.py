@@ -2,6 +2,7 @@ import aioboto3
 import datetime
 import calendar
 import asyncio
+import praw
 from aiocache import cached
 from aiocache.serializers import PickleSerializer
 from timeloop import Timeloop
@@ -83,11 +84,19 @@ async def stop_timer():
     timer.stop()
 
 
+async def get_banned_users():
+    try:
+        r = praw.Reddit('mod', user_agent='mobile:botranker:0.1 (by /u/brandawg93)')
+        return [x.name for x in list(r.subreddit('botranks').banned())]
+    except:
+        return []
+
+
 async def update_items_from_db():
     global cached_items
     db_table = 'Votes'
     async with aioboto3.resource('dynamodb', region_name='us-east-1', verify=False) as dynamodb:
-        table = dynamodb.Table(db_table)
+        table = await dynamodb.Table(db_table)
         response = await table.scan()
         items = response['Items']
         while response.get('LastEvaluatedKey'):
@@ -100,7 +109,8 @@ async def update_items_from_db():
 @cached(ttl=60, serializer=PickleSerializer())
 async def get_items_from_db(after='1y'):
     epoch = get_epoch(after)
-    return list(filter(lambda x: x['timestamp'] > epoch, cached_items))
+    bans = await get_banned_users()
+    return list(filter(lambda x: x['timestamp'] > epoch and ('author' not in x or x['author'] not in bans), cached_items))
 
 
 @app.get('/api/getrank/{bot}')
