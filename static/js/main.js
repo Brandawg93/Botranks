@@ -28,31 +28,31 @@ function refreshCharts(data, time) {
 	} else if (time.indexOf('w') > -1) {
 		let d = new Date();
 		let weekday = new Array(7);
-		weekday[0] = "Sunday";
-		weekday[1] = "Monday";
-		weekday[2] = "Tuesday";
-		weekday[3] = "Wednesday";
-		weekday[4] = "Thursday";
-		weekday[5] = "Friday";
-		weekday[6] = "Saturday";
+		weekday[0] = 'Sunday';
+		weekday[1] = 'Monday';
+		weekday[2] = 'Tuesday';
+		weekday[3] = 'Wednesday';
+		weekday[4] = 'Thursday';
+		weekday[5] = 'Friday';
+		weekday[6] = 'Saturday';
 		linePoint = weekday[d.getDay()];
 	} else if (time.indexOf('M') > -1) {
 		linePoint = new Date().getDate();
 	} else if (time.indexOf('y') > -1) {
 		let d = new Date();
 		let month = new Array(12);
-		month[0] = "January";
-		month[1] = "February";
-		month[2] = "March";
-		month[3] = "April";
-		month[4] = "May";
-		month[5] = "June";
-		month[6] = "July";
-		month[6] = "August";
-		month[6] = "September";
-		month[6] = "October";
-		month[6] = "November";
-		month[6] = "December";
+		month[0] = 'January';
+		month[1] = 'February';
+		month[2] = 'March';
+		month[3] = 'April';
+		month[4] = 'May';
+		month[5] = 'June';
+		month[6] = 'July';
+		month[6] = 'August';
+		month[6] = 'September';
+		month[6] = 'October';
+		month[6] = 'November';
+		month[6] = 'December';
 		linePoint = month[d.getMonth()];
 	}
 	new Chart(ctx, {
@@ -84,15 +84,15 @@ function refreshCharts(data, time) {
 			annotation: {
 				annotations: [
 					{
-						type: "line",
-						mode: "vertical",
-						scaleID: "x-axis-0",
+						type: 'line',
+						mode: 'vertical',
+						scaleID: 'x-axis-0',
 						value: linePoint,
-						borderColor: "red",
+						borderColor: 'red',
 						label: {
-							content: "Now",
+							content: 'Now',
 							enabled: true,
-							position: "top"
+							position: 'top'
 						}
 					}
 				]
@@ -209,7 +209,7 @@ function loadData(time, refresh=false) {
 				{ name: 'comment_karma', title: 'Comment Karma', type: 'number', width: 75 },
 				{ name: 'link_karma', title: 'Link Karma', type: 'number', width: 75 }
 			]
-		}).data("JSGrid");
+		}).data('JSGrid');
 
 		$('.searchbar').keyup(function() {
 			let val = $(this).val();
