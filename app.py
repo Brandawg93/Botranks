@@ -41,7 +41,7 @@ async def read_root(request: Request):
 
 def calculate_score(good_bots, bad_bots, karma):
     """Calculate the bot score."""
-    good_bots += int(karma / 10000)
+    # good_bots += int(karma / 10000)
     score = round(((good_bots + 1.9208) / (good_bots + bad_bots) - 1.96 * sqrt(
         (good_bots * bad_bots) / (good_bots + bad_bots) + 0.9604) / (good_bots + bad_bots)) / (
                               1 + 3.8416 / (good_bots + bad_bots)), 4)
