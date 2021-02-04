@@ -2,7 +2,7 @@ import aioboto3
 import datetime
 import calendar
 import asyncio
-import praw
+import asyncpraw
 from aiocache import cached
 from aiocache.serializers import PickleSerializer
 from timeloop import Timeloop
@@ -87,7 +87,7 @@ async def stop_timer():
 
 async def get_banned_users():
     try:
-        r = praw.Reddit('mod', user_agent='mobile:botranker:0.1 (by /u/brandawg93)')
+        r = asyncpraw.Reddit('mod', user_agent='mobile:botranker:0.1 (by /u/brandawg93)')
         return [x.name for x in list(r.subreddit('botranks').banned())]
     except:
         return []
@@ -214,8 +214,9 @@ async def get_top_bots(items):
 
 @app.get('/api/getdata')
 async def get_data(request: Request):
-    after = request.query_params['after']
-    if not after:
+    if 'after' in request.query_params:
+        after = request.query_params['after']
+    else:
         after = '1y'
     items = await get_items_from_db(after)
     ranks = await get_ranks(items)

@@ -5,4 +5,4 @@ uvicorn
 jinja2
 aiofiles
 timeloop
-praw
+asyncpraw
