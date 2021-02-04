@@ -114,6 +114,11 @@ async def get_items_from_db(after='1y'):
     return list(filter(lambda x: x['timestamp'] > epoch and ('author' not in x or x['author'] not in bans), cached_items))
 
 
+@app.get('/api/ping')
+async def ping():
+    return 'pong'
+
+
 @app.get('/api/getrank/{bot}')
 async def get_bot_rank(bot: str):
     items = await get_items_from_db('1y')
