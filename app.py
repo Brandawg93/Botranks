@@ -2,7 +2,6 @@ import aioboto3
 import datetime
 import calendar
 import asyncio
-import asyncpraw
 from aiocache import cached
 from aiocache.serializers import PickleSerializer
 from timeloop import Timeloop
@@ -31,7 +30,7 @@ async def robots():
 
 @app.get("/favicon.ico")
 async def favicon():
-    return FileResponse("static/favicon.ico")
+    return FileResponse("static/icons/favicon.ico")
 
 
 @app.get("/")
@@ -85,14 +84,6 @@ async def stop_timer():
     timer.stop()
 
 
-async def get_banned_users():
-    try:
-        r = asyncpraw.Reddit('mod', user_agent='mobile:botranker:0.1 (by /u/brandawg93)')
-        return [x.name for x in list(r.subreddit('botranks').banned())]
-    except:
-        return []
-
-
 async def update_items_from_db():
     global cached_items
     db_table = 'Votes'
@@ -110,8 +101,7 @@ async def update_items_from_db():
 @cached(ttl=60, serializer=PickleSerializer())
 async def get_items_from_db(after='1y'):
     epoch = get_epoch(after)
-    bans = await get_banned_users()
-    return list(filter(lambda x: x['timestamp'] > epoch and ('author' not in x or x['author'] not in bans), cached_items))
+    return list(filter(lambda x: x['timestamp'] > epoch, cached_items))
 
 
 @app.get('/api/ping')
