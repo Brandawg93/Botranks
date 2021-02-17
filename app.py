@@ -89,12 +89,31 @@ async def update_items_from_db():
     db_table = 'Votes'
     async with aioboto3.resource('dynamodb', region_name='us-east-1', verify=False) as dynamodb:
         table = await dynamodb.Table(db_table)
-        response = await table.scan()
-        items = response['Items']
+        scan_kwargs = {
+            'ProjectionExpression': 'link_karma, bot, #ts, comment_karma, id, vote',
+            'ExpressionAttributeNames': {'#ts': 'timestamp'}
+        }
+        response = await table.scan(**scan_kwargs)
+        data = response['Items']
         while response.get('LastEvaluatedKey'):
             response = await table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
-            items.extend(response['Items'])
+            data.extend(response['Items'])
 
+        items = []
+        for item in data:
+            obj = {
+                'link_karma': int(item['link_karma']),
+                'bot': item['bot'],
+                'timestamp': int(item['timestamp']),
+                'comment_karma': int(item['comment_karma']),
+                'id': item['id'],
+                'vote': item['vote']
+            }
+            if 'author' in item:
+                obj['author'] = item['author']
+            if 'subreddit' in item:
+                obj['subreddit'] = item['subreddit']
+            items.append(obj)
         cached_items = items
 
 
