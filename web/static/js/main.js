@@ -182,7 +182,7 @@ function loadData(time, refresh=false) {
 			},
 			fields: [
 				{ name: 'rank', title: 'Rank', type: 'number', width: 50 },
-				{ name: 'bot', title: 'Bot Name', type: 'text', width: 150 },
+				{ name: 'bot', title: 'Bot Name', type: 'text', width: 200 },
 				{ name: 'score', title: 'Score', type: 'number', width: 75 },
 				{ name: 'good_bots', title: 'Good Bot Votes', type: 'number', width: 75 },
 				{ name: 'bad_bots', title: 'Bad Bot Votes', type: 'number', width: 75 },
