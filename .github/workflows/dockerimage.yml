@@ -14,5 +14,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag botranks:$(date +%s)
+    - name: Build the Docker web image
+      run: docker build ./web --file web/Dockerfile --tag botranks_web:$(date +%s)
+    - uses: actions/checkout@v2
+    - name: Build the Docker app image
+      run: docker build ./app --file app/Dockerfile --tag botranks_app:$(date +%s)
