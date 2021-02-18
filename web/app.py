@@ -1,11 +1,6 @@
-import aioboto3
 import datetime
 import calendar
-import asyncio
-from aiocache import cached
-from aiocache.serializers import PickleSerializer
-from timeloop import Timeloop
-from datetime import timedelta
+import sqlite3
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -16,11 +11,10 @@ from math import sqrt
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-timer = Timeloop()
-cached_items = []
 
-UPDATE_INTERVAL = 600
+DB = '../app/votes.db'
 MINVOTES = 3
+TOP = 5
 
 
 @app.get("/robots.txt")
@@ -67,62 +61,6 @@ def get_epoch(after):
     return int((datetime.datetime.now() - tdelta).strftime('%s'))
 
 
-@timer.job(interval=timedelta(seconds=UPDATE_INTERVAL))
-def update_items():
-    """Run the process asynchronously on a timer."""
-    asyncio.run(update_items_from_db())
-
-
-@app.on_event('startup')
-async def start_timer():
-    await update_items_from_db()
-    timer.start(False)
-
-
-@app.on_event('shutdown')
-async def stop_timer():
-    timer.stop()
-
-
-async def update_items_from_db():
-    global cached_items
-    db_table = 'Votes'
-    async with aioboto3.resource('dynamodb', region_name='us-east-1', verify=False) as dynamodb:
-        table = await dynamodb.Table(db_table)
-        scan_kwargs = {
-            'ProjectionExpression': 'link_karma, bot, #ts, comment_karma, id, vote',
-            'ExpressionAttributeNames': {'#ts': 'timestamp'}
-        }
-        response = await table.scan(**scan_kwargs)
-        data = response['Items']
-        while response.get('LastEvaluatedKey'):
-            response = await table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
-            data.extend(response['Items'])
-
-        items = []
-        for item in data:
-            obj = {
-                'link_karma': int(item['link_karma']),
-                'bot': item['bot'],
-                'timestamp': int(item['timestamp']),
-                'comment_karma': int(item['comment_karma']),
-                'id': item['id'],
-                'vote': item['vote']
-            }
-            if 'author' in item:
-                obj['author'] = item['author']
-            if 'subreddit' in item:
-                obj['subreddit'] = item['subreddit']
-            items.append(obj)
-        cached_items = items
-
-
-@cached(ttl=60, serializer=PickleSerializer())
-async def get_items_from_db(after='1y'):
-    epoch = get_epoch(after)
-    return list(filter(lambda x: x['timestamp'] > epoch, cached_items))
-
-
 @app.get('/api/ping')
 async def ping():
     return 'pong'
@@ -130,44 +68,71 @@ async def ping():
 
 @app.get('/api/getrank/{bot}')
 async def get_bot_rank(bot: str):
-    items = await get_items_from_db('1y')
-    ranks = await get_ranks(items)
-    rank = [x for x in ranks if x['bot'] == bot]
+    ranks = await get_ranks('1y')
+    rank = next((x for x in ranks if x['bot'] == bot), None)
+    if not rank:
+        raise HTTPException(status_code=404, detail="Bot not found")
+    return rank
+
+
+@app.get('/api/getbadge/{bot}')
+async def get_bot_rank(bot: str):
+    ranks = await get_ranks('1y')
+    rank = next((x for x in ranks if x['bot'] == bot), None)
     if not rank:
         raise HTTPException(status_code=404, detail="Bot not found")
     return {
-        "statusCode": 200,
-        "body": rank[0] if len(rank) > 0 else None
+        'schemaVersion': 1,
+        'label': rank['bot'],
+        'message': rank['rank'],
+        'color': 'orange'
     }
 
 
-async def get_ranks(items):
+async def get_ranks(after='1y'):
+    epoch = get_epoch(after)
     ranks = []
-    for key, group in groupby(items, key=lambda x: x['bot']):
-        group_lst = list(group)
-        good_bots = len(list(filter(lambda x: x['vote'] == 'G', group_lst)))
-        bad_bots = len(list(filter(lambda x: x['vote'] == 'B', group_lst)))
-        comment_karma = max(x['comment_karma'] for x in group_lst)
-        link_karma = max(x['link_karma'] for x in group_lst)
-        if good_bots + bad_bots >= MINVOTES:
-            ranks.append(
-                {
-                    'bot': key,
-                    'score': calculate_score(good_bots, bad_bots, int(comment_karma + link_karma)),
-                    'good_bots': good_bots,
-                    'bad_bots': bad_bots,
-                    'comment_karma': int(comment_karma),
-                    'link_karma': int(link_karma)
-                }
-            )
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    c.execute('''select bot,
+    			link_karma,
+    			comment_karma,
+    			good_votes,
+    			bad_votes
+                    from (select	v.bot,
+    			            max(b.link_karma) as link_karma,
+                            max(b.comment_karma) as comment_karma,
+                            sum(CASE WHEN v.vote = 'G' THEN 1 ELSE 0 END) as good_votes,
+                            sum(CASE WHEN v.vote = 'B' THEN 1 ELSE 0 END) as bad_votes
+                        from (select * from votes where timestamp >= ?) v
+                        inner join bots b on v.bot = b.bot
+                        group by v.bot)
+                    where good_votes + bad_votes >= ?''', [epoch, MINVOTES])
+
+    for row in c:
+        bot, link_karma, comment_karma, good_bots, bad_bots = row
+        ranks.append(
+            {
+                'bot': bot,
+                'score': calculate_score(good_bots, bad_bots, int(comment_karma + link_karma)),
+                'good_bots': good_bots,
+                'bad_bots': bad_bots,
+                'comment_karma': int(comment_karma),
+                'link_karma': int(link_karma)
+            }
+        )
+    conn.close()
     ranks.sort(key=lambda x: x['score'], reverse=True)
     for count, _ in enumerate(ranks):
         ranks[count]['rank'] = count + 1
     return ranks
 
 
-async def get_top_subs(items):
-    items.sort(key=lambda x: x['subreddit'])
+async def get_top_subs(count=TOP, after='1y'):
+    epoch = get_epoch(after)
+    subs = []
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
     top_subs = {
         'labels': [],
         'datasets':
@@ -184,21 +149,29 @@ async def get_top_subs(items):
                 }
             ]
     }
-    subs = []
-    for key, group in groupby(items, key=lambda x: x['subreddit']):
-        if key and key != 'NA':
-            subs.append({
-                'labels': key,
-                'data': len(list(group))
-            })
-    subs.sort(key=lambda x: x['data'], reverse=True)
-    for sub in subs[:5]:
+    c.execute('''select subreddit, count(*) from votes
+                    where subreddit IS NOT NULL AND subreddit != "" AND timestamp >= ?
+                    group by subreddit
+                    order by count(*) desc
+                    limit ?''', [epoch, count])
+    for row in c:
+        subs.append({
+            'labels': row[0],
+            'data': row[1]
+        })
+    conn.close()
+
+    for sub in subs:
         top_subs['labels'].append(sub['labels'])
         top_subs['datasets'][0]['data'].append(sub['data'])
     return top_subs
 
 
-async def get_top_bots(items):
+async def get_top_bots(count=TOP, after='1y'):
+    epoch = get_epoch(after)
+    bots = []
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
     top_bots = {
         'labels': [],
         'datasets':
@@ -215,26 +188,64 @@ async def get_top_bots(items):
                 }
             ]
     }
-    for bot in items:
-        top_bots['labels'].append(bot['bot'])
-        top_bots['datasets'][0]['data'].append(round((bot['good_bots'] + 1) / (bot['bad_bots'] + 1), 2))
+    c.execute('''select bot,
+			round((good_votes + 1) / (bad_votes + 1), 2)
+                from (select	bot,
+                        sum(CASE WHEN vote = 'G' THEN 1 ELSE 0 END) as good_votes,
+                        sum(CASE WHEN vote = 'B' THEN 1 ELSE 0 END) as bad_votes
+                    from (select * from votes where timestamp >= ?)
+                    group by bot)
+                group by bot
+                order by round((good_votes + 1) / (bad_votes + 1), 2) DESC
+                limit ?''', [epoch, count])
+    for row in c:
+        bots.append({
+            'labels': row[0],
+            'data': row[1]
+        })
+    conn.close()
+
+    for bot in bots:
+        top_bots['labels'].append(bot['labels'])
+        top_bots['datasets'][0]['data'].append(bot['data'])
     return top_bots
 
 
-@app.get('/api/getdata')
-async def get_data(request: Request):
-    if 'after' in request.query_params:
-        after = request.query_params['after']
-    else:
-        after = '1y'
-    items = await get_items_from_db(after)
-    ranks = await get_ranks(items)
-    for item in items:
-        item['datetime'] = datetime.datetime.fromtimestamp(item['timestamp'])
-        if 'subreddit' not in item:
-            item['subreddit'] = 'NA'
+async def get_pie(after='1y'):
+    epoch = get_epoch(after)
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    c.execute('''select sum(CASE WHEN vote = 'G' THEN 1 ELSE 0 END) from votes where timestamp >= ?''', [epoch])
+    total_gb = c.fetchone()[0]
+    c.execute('''select sum(CASE WHEN vote = 'B' THEN 1 ELSE 0 END) from votes where timestamp >= ?''', [epoch])
+    total_bb = c.fetchone()[0]
+    conn.close()
+    return {
+            'labels': ['Good Bot Votes', 'Bad Bot Votes'],
+            'datasets':
+                [
+                    {
+                        'data': [total_gb, total_bb],
+                        'backgroundColor': ['rgba(0, 255, 0, 1)', 'rgba(255, 0, 0, 1)']
+                    }
+                ]
+        }
 
-    top_subs = await get_top_subs(items)
+
+async def get_votes(after='1y'):
+    epoch = get_epoch(after)
+    items = []
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    c.execute('''select timestamp, vote from votes where timestamp >= ?''', [epoch])
+    for row in c:
+        timestamp, vote = row
+        items.append({
+            'vote': vote,
+            'datetime': datetime.datetime.fromtimestamp(timestamp)
+        })
+    conn.close()
+
     votes = {
         'labels': [],
         'datasets':
@@ -257,19 +268,6 @@ async def get_data(request: Request):
 
             ]
     }
-    total_gb = len(list(filter(lambda x: x['vote'] == 'G', items)))
-    total_bb = len(list(filter(lambda x: x['vote'] == 'B', items)))
-    pie = {
-        'labels': ['Good Bot Votes', 'Bad Bot Votes'],
-        'datasets':
-            [
-                {
-                    'data': [total_gb, total_bb],
-                    'backgroundColor': ['rgba(0, 255, 0, 1)', 'rgba(255, 0, 0, 1)']
-                }
-            ]
-    }
-    top_bots = await get_top_bots(ranks[:5])
     if 'd' in after:
         items.sort(key=lambda x: x['datetime'].hour)
         group_by = groupby(items, key=lambda x: x['datetime'].hour)
@@ -307,15 +305,33 @@ async def get_data(request: Request):
                     votes['datasets'][1]['data'].append(0)
                     votes['datasets'][0]['data'].append(0)
                     break
+    return votes
 
-    response = {
-        'ranks': ranks,
+
+@app.get('/api/getranks')
+async def get_rank_data(request: Request):
+    if 'after' in request.query_params:
+        after = request.query_params['after']
+    else:
+        after = '1y'
+    return await get_ranks(after)
+
+
+@app.get('/api/getcharts')
+async def get_chart_data(request: Request):
+    if 'after' in request.query_params:
+        after = request.query_params['after']
+    else:
+        after = '1y'
+
+    votes = await get_votes(after)
+    pie = await get_pie(after)
+    top_subs = await get_top_subs(TOP, after)
+    top_bots = await get_top_bots(TOP, after)
+
+    return {
         'votes': votes,
         'pie': pie,
         'top_bots': top_bots,
         'top_subs': top_subs
-    }
-    return {
-        "statusCode": 200,
-        "body": response
     }

@@ -1,7 +1,0 @@
-fastapi
-aioboto3
-aiocache
-uvicorn
-jinja2
-aiofiles
-timeloop

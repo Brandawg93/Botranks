@@ -14,10 +14,10 @@ let getUrlParameter = function getUrlParameter(sParam) {
 };
 
 function refreshCharts(data, time) {
-	let votes = data['body']['votes'];
-	let pie = data['body']['pie'];
-	let topBots = data['body']['top_bots'];
-	let topSubs = data['body']['top_subs'];
+	let votes = data['votes'];
+	let pie = data['pie'];
+	let topBots = data['top_bots'];
+	let topSubs = data['top_subs'];
 	let ctx = document.getElementById('votes').getContext('2d');
 	let ctxPie = document.getElementById('votesPie').getContext('2d');
 	let ctxTopBots = document.getElementById('topBots').getContext('2d');
@@ -141,29 +141,9 @@ function refreshREADME() {
 	});
 }
 
-function checkAdBlocker() {
-	window.onload = function() {
-		setTimeout(function() {
-			let ad = document.querySelector('ins.adsbygoogle');
-			if (ad && ad.innerHTML.replace(/\s/g, '').length === 0) {
-				ad.style.cssText = 'display:block !important';
-				ad.innerHTML = 'You seem to blocking Google AdSense ads in your browser.';
-			}
-		}, 2000);
-	};
-}
-
 function loadData(time, refresh=false) {
-	$.getJSON( 'api/getdata?after=' + time, function( data ) {
+	$.getJSON('api/getranks?after=' + time, function( ranks ) {
 		$('#grid-loader').remove();
-		let statsTab = $('.nav-pills #statsTab');
-		statsTab.on('shown.bs.tab', function(){
-			refreshCharts(data, time);
-		});
-		if (refresh && statsTab.hasClass('active')) {
-			refreshCharts(data, time);
-		}
-		let ranks = data['body']['ranks'];
 		let firstLoad = true;
 		$('#ranksGrid').jsGrid({
 			width: '100%',
@@ -220,10 +200,18 @@ function loadData(time, refresh=false) {
 			$('#ranksGrid').jsGrid('option', 'data', filtered);
 		});
 	});
+	$.getJSON( 'api/getcharts?after=' + time, function( data ) {
+		let statsTab = $('.nav-pills #statsTab');
+		statsTab.on('shown.bs.tab', function(){
+			refreshCharts(data, time);
+		});
+		if (refresh && statsTab.hasClass('active')) {
+			refreshCharts(data, time);
+		}
+	});
 }
 
 $(document).ready(function() {
-	checkAdBlocker();
 	loadData('1y');
 
 	let aboutTab = $('.nav-pills #aboutTab');
