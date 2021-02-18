@@ -84,7 +84,7 @@ async def get_bot_rank(bot: str):
     return {
         'schemaVersion': 1,
         'label': rank['bot'],
-        'message': rank['rank'],
+        'message': str(rank['rank']),
         'color': 'orange'
     }
 
