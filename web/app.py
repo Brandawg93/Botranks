@@ -1,12 +1,9 @@
 import datetime
-import calendar
 import sqlite3
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import FileResponse
-from itertools import groupby
-from math import sqrt
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -30,14 +27,6 @@ async def favicon():
 @app.get("/")
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
-
-
-def calculate_score(good_bots, bad_bots):
-    """Calculate the bot score."""
-    score = round(((good_bots + 1.9208) / (good_bots + bad_bots) - 1.96 * sqrt(
-        (good_bots * bad_bots) / (good_bots + bad_bots) + 0.9604) / (good_bots + bad_bots)) / (
-                              1 + 3.8416 / (good_bots + bad_bots)), 4)
-    return score
 
 
 def get_epoch(after):
@@ -92,13 +81,17 @@ async def get_ranks(after='1y'):
     epoch = get_epoch(after)
     ranks = []
     conn = sqlite3.connect(DB)
+    conn.create_function("power", 2, lambda x, y: x ** y)
     c = conn.cursor()
     c.execute('''select bot,
     			link_karma,
     			comment_karma,
     			good_votes,
-    			bad_votes
-                    from (select	v.bot,
+    			bad_votes,
+    			ROUND(((good_votes + 1.9208) / (good_votes + bad_votes) - 1.96 * power(
+                (good_votes * bad_votes) / (good_votes + bad_votes) + 0.9604, 0.5) / (good_votes + bad_votes)) / (
+                1 + 3.8416 / (good_votes + bad_votes)), 4) as score
+                    from (select v.bot,
     			            max(b.link_karma) as link_karma,
                             max(b.comment_karma) as comment_karma,
                             sum(CASE WHEN v.vote = 'G' THEN 1 ELSE 0 END) as good_votes,
@@ -106,24 +99,25 @@ async def get_ranks(after='1y'):
                         from (select * from votes where timestamp >= ?) v
                         inner join bots b on v.bot = b.bot
                         group by v.bot)
-                    where good_votes + bad_votes >= ?''', [epoch, MINVOTES])
+                    where good_votes + bad_votes >= ?
+                    order by score desc''', [epoch, MINVOTES])
 
+    rank = 0
     for row in c:
-        bot, link_karma, comment_karma, good_bots, bad_bots = row
+        bot, link_karma, comment_karma, good_bots, bad_bots, score = row
+        rank += 1
         ranks.append(
             {
+                'rank': rank,
                 'bot': bot,
-                'score': calculate_score(good_bots, bad_bots),
+                'score': score,
                 'good_bots': good_bots,
                 'bad_bots': bad_bots,
-                'comment_karma': int(comment_karma),
-                'link_karma': int(link_karma)
+                'comment_karma': comment_karma,
+                'link_karma': link_karma
             }
         )
     conn.close()
-    ranks.sort(key=lambda x: x['score'], reverse=True)
-    for count, _ in enumerate(ranks):
-        ranks[count]['rank'] = count + 1
     return ranks
 
 
@@ -149,7 +143,7 @@ async def get_top_subs(count=TOP, after='1y'):
             ]
     }
     c.execute('''select subreddit, count(*) from votes
-                    where subreddit IS NOT NULL AND subreddit != "" AND timestamp >= ?
+                    where subreddit IS NOT NULL AND subreddit != '' AND timestamp >= ?
                     group by subreddit
                     order by count(*) desc
                     limit ?''', [epoch, count])
@@ -189,7 +183,7 @@ async def get_top_bots(count=TOP, after='1y'):
     }
     c.execute('''select bot,
 			round((good_votes + 1) / (bad_votes + 1), 2)
-                from (select	bot,
+                from (select bot,
                         sum(CASE WHEN vote = 'G' THEN 1 ELSE 0 END) as good_votes,
                         sum(CASE WHEN vote = 'B' THEN 1 ELSE 0 END) as bad_votes
                     from (select * from votes where timestamp >= ?)
@@ -233,17 +227,8 @@ async def get_pie(after='1y'):
 
 async def get_votes(after='1y'):
     epoch = get_epoch(after)
-    items = []
     conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('''select timestamp, vote from votes where timestamp >= ?''', [epoch])
-    for row in c:
-        timestamp, vote = row
-        items.append({
-            'vote': vote,
-            'datetime': datetime.datetime.fromtimestamp(timestamp)
-        })
-    conn.close()
 
     votes = {
         'labels': [],
@@ -267,43 +252,70 @@ async def get_votes(after='1y'):
 
             ]
     }
+    results = {}
     if 'd' in after:
-        items.sort(key=lambda x: x['datetime'].hour)
-        group_by = groupby(items, key=lambda x: x['datetime'].hour)
-    elif 'w' in after:
-        items.sort(key=lambda x: x['datetime'].weekday())
-        group_by = groupby(items, key=lambda x: calendar.day_name[x['datetime'].weekday()])
-    elif 'M' in after:
-        items.sort(key=lambda x: x['datetime'].day)
-        group_by = groupby(items, key=lambda x: x['datetime'].day)
-    else:
-        items.sort(key=lambda x: x['datetime'].month)
-        group_by = groupby(items, key=lambda x: calendar.month_name[x['datetime'].month])
-    for key, group in group_by:
-        votes['labels'].append(key)
-        group_lst = list(group)
-        good_bots = len(list(filter(lambda x: x['vote'] == 'G', group_lst)))
-        bad_bots = len(list(filter(lambda x: x['vote'] == 'B', group_lst)))
-        votes['datasets'][2]['data'].append(len(group_lst))
-        votes['datasets'][1]['data'].append(good_bots)
-        votes['datasets'][0]['data'].append(bad_bots)
+        for i in range(24):
+            results[str(i)] = {'good_votes': 0, 'bad_votes': 0}
+        c.execute('''select strftime('%H', timestamp, 'unixepoch') as unit,
+                           sum(CASE WHEN vote = 'G' THEN 1 ELSE 0 END) as good_votes,
+                           sum(CASE WHEN vote = 'B' THEN 1 ELSE 0 END) as bad_votes
+                    from votes
+                    where timestamp >= ?
+                    group by unit''', [epoch])
+        for row in c:
+            key, good_votes, bad_votes = row
+            results[str(int(key))] = {'good_votes': good_votes, 'bad_votes': bad_votes}
 
-    # This fills empty values in the votes line graph
-    if 'd' in after:
-        for _ in range(24 - len(votes['labels'])):
-            for count, label in enumerate(votes['labels']):
-                if (count == 0 and votes['labels'][-1] != label - 1 and label > 0) or (votes['labels'][count - 1] != label - 1 and label > 0):
-                    votes['labels'].insert(count, label - 1)
-                    votes['datasets'][2]['data'].insert(count, 0)
-                    votes['datasets'][1]['data'].insert(count, 0)
-                    votes['datasets'][0]['data'].insert(count, 0)
-                    break
-                if count + 1 == len(votes['labels']) and label != 23:
-                    votes['labels'].append(label + 1)
-                    votes['datasets'][2]['data'].append(0)
-                    votes['datasets'][1]['data'].append(0)
-                    votes['datasets'][0]['data'].append(0)
-                    break
+    elif 'w' in after:
+        days_of_week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        for day in days_of_week:
+            results[day] = {'good_votes': 0, 'bad_votes': 0}
+        c.execute('''select strftime('%w', timestamp, 'unixepoch') as unit,
+                           sum(CASE WHEN vote = 'G' THEN 1 ELSE 0 END) as good_votes,
+                           sum(CASE WHEN vote = 'B' THEN 1 ELSE 0 END) as bad_votes
+                    from votes
+                    where timestamp >= ?
+                    group by unit''', [epoch])
+        for row in c:
+            key, good_votes, bad_votes = row
+            results[days_of_week[int(key)]] = {'good_votes': good_votes, 'bad_votes': bad_votes}
+
+    elif 'M' in after:
+        for i in range(31):
+            results[str(i)] = {'good_votes': 0, 'bad_votes': 0}
+        c.execute('''select strftime('%d', timestamp, 'unixepoch') as unit,
+                           sum(CASE WHEN vote = 'G' THEN 1 ELSE 0 END) as good_votes,
+                           sum(CASE WHEN vote = 'B' THEN 1 ELSE 0 END) as bad_votes
+                    from votes
+                    where timestamp >= ?
+                    group by unit''', [epoch])
+        for row in c:
+            key, good_votes, bad_votes = row
+            results[str(int(key))] = {'good_votes': good_votes, 'bad_votes': bad_votes}
+
+    else:
+        months_of_year = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        for month in months_of_year:
+            results[month] = {'good_votes': 0, 'bad_votes': 0}
+        c.execute('''select strftime('%m', timestamp, 'unixepoch') as unit,
+                           sum(CASE WHEN vote = 'G' THEN 1 ELSE 0 END) as good_votes,
+                           sum(CASE WHEN vote = 'B' THEN 1 ELSE 0 END) as bad_votes
+                    from votes
+                    where timestamp >= ?
+                    group by unit''', [epoch])
+        for row in c:
+            key, good_votes, bad_votes = row
+            results[months_of_year[int(key) - 1]] = {'good_votes': good_votes, 'bad_votes': bad_votes}
+
+    for key in results:
+        good_votes = results[key]['good_votes']
+        bad_votes = results[key]['bad_votes']
+        votes['labels'].append(key)
+        votes['datasets'][2]['data'].append(good_votes + bad_votes)
+        votes['datasets'][1]['data'].append(good_votes)
+        votes['datasets'][0]['data'].append(bad_votes)
+
+    conn.close()
     return votes
 
 
