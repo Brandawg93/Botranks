@@ -1,36 +1,35 @@
-import requests
+from psaw import PushshiftAPI
 from db import DB
 from datetime import datetime
 from timeloop import Timeloop
 from datetime import timedelta
 
 timer = Timeloop()
+api = PushshiftAPI()
 
-SIZE = 500
-AFTER = '1h'
-UPDATE_INTERVAL = 1
+UPDATE_INTERVAL = 10
 
 
-def search_pushshift(q):
+def search_pushshift(q, timestamp=None):
     """Search pushshift for specific criteria."""
-    fields = 'author,body,created_utc,id,link_id,parent_id,subreddit'
-    r = requests.get('https://api.pushshift.io/reddit/search/comment/?q={}&fields={}&after={}&size={}&sort=asc&sort_type=created_utc'.format(q, fields, AFTER, SIZE))
-    r.raise_for_status()
-    return r.json()['data']
+    if not timestamp:
+        timestamp = '1h'
+    return api.search_comments(q=q, after=timestamp)
 
 
-def get_votes():
+def get_votes(timestamp):
     """Get last hour worth of votes."""
-    query = '"good%20bot"|"bad%20bot"'
-    return search_pushshift(query)
+    query = '"good bot"|"bad bot"'
+    return search_pushshift(query, timestamp)
 
 
-@timer.job(interval=timedelta(hours=UPDATE_INTERVAL))
+@timer.job(interval=timedelta(minutes=UPDATE_INTERVAL))
 def update_db():
     db = DB('votes.db')
 
     print('Updating db...')
-    votes = get_votes()
+    last_update = db.get_last_updated_timestamp()
+    votes = get_votes(last_update)
     num_of_updates = db.add_votes(votes)
     now = datetime.now()
     print('db updated at {} with {} updates.'.format(now.strftime('%Y-%m-%d %H:%M:%S'), num_of_updates))

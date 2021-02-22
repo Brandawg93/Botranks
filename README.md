@@ -3,6 +3,26 @@
 
 BotRanks is a website that shows the ranks of bots on Reddit.
 
+# Scoring
+
+The score is based on a confidence interval between the number of good votes and number of bad votes. The fomula is shown below:
+
+```
+                                ___________________
+                               / G  *  B           
+                            | /  -------  +  0.9604
+ G  +  1.9208               |/   G  +  B           
+ ------------  -  1.96  *  ------------------------
+    G  +  B                         G  +  B        
+---------------------------------------------------
+                   1  +  3.8416                    
+                   ------------                    
+                      G  +  B                      
+
+G = Good Votes
+B = Bad Votes
+```
+
 # Badges
 Badges can be created using [shields.io](https://shields.io/). Here are a few examples:
 

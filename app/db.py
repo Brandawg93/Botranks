@@ -25,10 +25,6 @@ def get_vote_type(body):
     return VoteType.NONE
 
 
-def get_ttl(epoch):
-    return epoch + 31536000
-
-
 class DB:
     def __init__(self, file):
         self.conn = sqlite3.connect(file)
@@ -41,7 +37,7 @@ class DB:
         c = self.conn.cursor()
 
         # get the count of tables with the name
-        c.execute(''' SELECT count(name) FROM sqlite_master WHERE type='table' AND name='{}' '''.format(table))
+        c.execute("SELECT count(name) FROM sqlite_master WHERE type='table' AND name=?", [table])
 
         # if the count is 1, then table exists
         return c.fetchone()[0] == 1
@@ -55,20 +51,27 @@ class DB:
                      id text, 
                      subreddit text, 
                      timestamp INTEGER, 
-                     ttl INTEGER, 
                      vote text, 
                      author text)''')
 
-        c.execute('''CREATE UNIQUE INDEX idx_votes_id ON votes (id)''')
+        c.execute("CREATE UNIQUE INDEX idx_votes_id ON votes (id)")
 
     def _create_bots_table(self):
         c = self.conn.cursor()
 
         # Create table
-        c.execute('''CREATE TABLE bots
-                     (bot text, comment_karma INTEGER, link_karma INTEGER)''')
+        c.execute("CREATE TABLE bots (bot text, comment_karma INTEGER, link_karma INTEGER)")
 
-        c.execute('''CREATE UNIQUE INDEX idx_bots_bot ON bots (bot)''')
+        c.execute("CREATE UNIQUE INDEX idx_bots_bot ON bots (bot)")
+
+    def get_last_updated_timestamp(self):
+        c = self.conn.cursor()
+        c.execute("SELECT timestamp from votes order by id DESC LIMIT 1")
+        query = c.fetchone()
+        if query and len(query) > 0:
+            return query[0]
+        else:
+            return None
 
     def add_votes(self, votes):
         """Update bots in db."""
@@ -85,14 +88,16 @@ class DB:
 
         for vote in votes:
             parent = None
+            vote_type = get_vote_type(vote.body)
+            if vote_type == VoteType.NONE:
+                continue
             try:
-                p_type = vote['parent_id'][:2]
+                p_type = vote.parent_id[:2]
                 if p_type == 't1':
-                    parent = r.comment(vote['parent_id'][3:])
+                    parent = r.comment(vote.parent_id[3:])
                 elif p_type == 't3':
-                    parent = r.submission(vote['parent_id'][3:])
-                vote_type = get_vote_type(vote['body'])
-                if vote_type != VoteType.NONE and parent and parent.author:
+                    parent = r.submission(vote.parent_id[3:])
+                if parent and parent.author:
                     try:
                         comment_karma = parent.author.comment_karma
                         link_karma = parent.author.link_karma
@@ -110,15 +115,14 @@ class DB:
                         bots[parent.author.name] = {'comment_karma': comment_karma, 'link_karma': link_karma}
                     try:
                         # Insert a row of data
-                        c.execute("INSERT INTO votes VALUES ('{}', '{}', '{}', {}, {}, '{}', '{}')".format(
-                            parent.author.name,
-                            vote['id'],
-                            vote['subreddit'],
-                            vote['created_utc'],
-                            get_ttl(vote['created_utc']),
-                            vote_type.name[0],
-                            vote['author']
-                        ))
+                        c.execute("INSERT INTO votes VALUES (?, ?, ?, ?, ?, ?)",
+                                  [parent.author.name,
+                                   vote.id,
+                                   vote.subreddit,
+                                   vote.created_utc,
+                                   vote_type.name[0],
+                                   vote.author
+                                   ])
                         updates += 1
                     except sqlite3.IntegrityError:
                         pass
@@ -127,17 +131,17 @@ class DB:
         for bot in bots:
             try:
                 # Insert a row of data
-                c.execute("INSERT INTO bots VALUES ('{}', '{}', '{}')".format(
-                    bot,
-                    bots[bot]['comment_karma'],
-                    bots[bot]['link_karma']
-                ))
+                c.execute("INSERT INTO bots VALUES (?, ?, ?)",
+                          [bot,
+                           bots[bot]['comment_karma'],
+                           bots[bot]['link_karma']
+                           ])
             except sqlite3.IntegrityError:
-                c.execute("UPDATE bots SET comment_karma = {}, link_karma = {} WHERE bot = '{}'".format(
-                    bots[bot]['comment_karma'],
-                    bots[bot]['link_karma'],
-                    bot
-                ))
+                c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?",
+                          [bots[bot]['comment_karma'],
+                           bots[bot]['link_karma'],
+                           bot
+                           ])
 
         return updates
 
