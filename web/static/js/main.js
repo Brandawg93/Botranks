@@ -145,7 +145,9 @@ function loadData(time, refresh=false) {
 	$.getJSON('api/getranks?after=' + time, function( ranks ) {
 		$('#grid-loader').remove();
 		let firstLoad = true;
-		$('#ranksGrid').jsGrid({
+		let grid = $('#ranksGrid');
+		let searchbar = $('.searchbar');
+		grid.jsGrid({
 			width: '100%',
 			inserting: false,
 			editing: false,
@@ -158,13 +160,13 @@ function loadData(time, refresh=false) {
 			onRefreshed() {
 				if (firstLoad) {
 					firstLoad = false;
-					$('.searchbar').show();
+					searchbar.show();
 					let bot = getUrlParameter('bot');
 					if (typeof bot !== 'undefined') {
 						let rank = ranks.find((x) => x['bot'] === bot);
 						let page = Math.ceil(rank['rank'] / 100);
 						if (page > 1) {
-							let grid = $('#ranksGrid').data('JSGrid');
+							let grid = grid.data('JSGrid');
 							grid.openPage(page);
 						}
 						let cell = $('td:contains(\'' + bot + '\')');
@@ -191,13 +193,13 @@ function loadData(time, refresh=false) {
 			]
 		}).data('JSGrid');
 
-		$('.searchbar').keyup(function() {
+		searchbar.keyup(function() {
 			let val = $(this).val();
 			let filtered = $.grep( ranks, function( rank, i ) {
 				let bot = rank.bot.toLowerCase();
 				return bot.startsWith(val.toLowerCase());
 			});
-			$('#ranksGrid').jsGrid('option', 'data', filtered);
+			grid.jsGrid('option', 'data', filtered);
 		});
 	});
 	$.getJSON( 'api/getcharts?after=' + time, function( data ) {

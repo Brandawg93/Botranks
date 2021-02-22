@@ -106,6 +106,10 @@ hr {
   background-color: #505050;
 }
 
+code {
+  color: gray !important;
+}
+
 @media (min-width: 768px) {
   .navbar-brand.abs {
     position: absolute;
