@@ -113,7 +113,7 @@ async def get_ranks(after='1y'):
         ranks.append(
             {
                 'bot': bot,
-                'score': calculate_score(good_bots, bad_bots, int(comment_karma + link_karma)),
+                'score': calculate_score(good_bots, bad_bots),
                 'good_bots': good_bots,
                 'bad_bots': bad_bots,
                 'comment_karma': int(comment_karma),
