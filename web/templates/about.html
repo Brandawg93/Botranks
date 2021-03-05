@@ -23,19 +23,16 @@
         <link rel="apple-touch-icon" sizes="180x180" href="static/icons/apple-touch-icon-180x180.png" />
         <link type="text/css" rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
         <link type="text/css" rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-        <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
-        <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
-        <link type="text/css" rel="stylesheet" href="static/css/main.css">
+        <link rel="stylesheet" type="text/css" href="static/css/main.css">
 
-{#        <script data-ad-client="ca-pub-6473000979656682" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>#}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
         <script
           src="https://code.jquery.com/jquery-3.6.0.min.js"
           integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
           crossorigin="anonymous">
         </script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
-        <script src="static/js/grid.js"></script>
+        <script src="static/js/about.js"></script>
         <script src="static/js/common.js"></script>
 	</head>
 	<body>
@@ -47,26 +44,13 @@
             <div class="navbar-collapse collapse" id="collapsingNavbar">
                 <ul class="navbar-nav nav nav-pills mr-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="/">Ranks</a>
+                        <a class="nav-link" href="/">Ranks</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/stats">Stats</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/about">About</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Duration
-                        </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="#" data-value="1d">Day</a>
-                        <a class="dropdown-item" href="#" data-value="1w">Week</a>
-                        <a class="dropdown-item" href="#" data-value="1M">Month</a>
-                        <a class="dropdown-item active" href="#" data-value="1y">Year</a>
-                    </div>
+                        <a class="nav-link active" href="/about">About</a>
                     </li>
                 </ul>
             </div>
@@ -76,10 +60,7 @@
             <span class="sr-only">Loading...</span>
         </div>
         <div class="container">
-            <div class="md-form mt-0">
-                <input class="form-control searchbar shadow-none" type="text" placeholder="Search" aria-label="Search">
-            </div>
-            <div id="ranksGrid"></div>
+            <div id="README"></div>
         </div>
         <footer class="footer">
             <div class="container text-center">

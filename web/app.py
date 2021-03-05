@@ -29,6 +29,16 @@ async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
+@app.get("/about")
+async def read_about(request: Request):
+    return templates.TemplateResponse("about.html", {"request": request})
+
+
+@app.get("/stats")
+async def read_stats(request: Request):
+    return templates.TemplateResponse("stats.html", {"request": request})
+
+
 def get_epoch(after):
     """Get epoch from string."""
     length = abs(int(after[:-1]))
