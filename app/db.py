@@ -123,6 +123,7 @@ class DB:
                                    vote.author
                                    ])
                         updates += 1
+                        self.conn.commit()
                     except sqlite3.IntegrityError:
                         pass
             except ClientException as e:
