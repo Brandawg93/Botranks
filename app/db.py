@@ -73,12 +73,18 @@ class DB:
         else:
             return None
 
+    def filter_valid(self, vote):
+        """Filter existing votes."""
+        c = self.conn.cursor()
+        c.execute("SELECT count(id) from votes where id = ?", [vote.id])
+        vote_type = get_vote_type(vote.body)
+        return vote_type != VoteType.NONE and c.fetchone()[0] == 0
+
     def add_votes(self, votes):
         """Update bots in db."""
         c = self.conn.cursor()
         updates = 0
         bots = {}
-
         r = praw.Reddit(
             client_id=constants.REDDIT_CLIENT_ID,
             client_secret=constants.REDDIT_CLIENT_SECRET,
@@ -86,17 +92,10 @@ class DB:
             user_agent='mobile:botranker:0.1 (by /u/brandawg93)',
             username=constants.REDDIT_USERNAME)
 
-        for vote in votes:
-            parent = None
+        for vote in filter(self.filter_valid, votes):
             vote_type = get_vote_type(vote.body)
-            if vote_type == VoteType.NONE:
-                continue
             try:
-                p_type = vote.parent_id[:2]
-                if p_type == 't1':
-                    parent = r.comment(vote.parent_id[3:])
-                elif p_type == 't3':
-                    parent = r.submission(vote.parent_id[3:])
+                parent = next(r.info(fullnames=[vote.parent_id]), None)
                 if parent and parent.author:
                     try:
                         comment_karma = parent.author.comment_karma
