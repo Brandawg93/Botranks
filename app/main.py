@@ -27,6 +27,7 @@ def get_votes(timestamp):
 @timer.job(interval=timedelta(minutes=UPDATE_INTERVAL))
 def update_db():
     db = DB('votes.db')
+    db.create_tables()
 
     print('Updating db...')
     last_update = db.get_last_updated_timestamp()
