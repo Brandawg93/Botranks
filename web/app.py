@@ -9,7 +9,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-DB_FILE = '../app/votes.db'
+DB_FILE = '../votes.db'
 
 
 @app.get("/robots.txt")

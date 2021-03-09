@@ -8,6 +8,7 @@ timer = Timeloop()
 api = PushshiftAPI()
 
 UPDATE_INTERVAL = 10
+DB_FILE = '../votes.db'
 
 
 def search_pushshift(q, timestamp=None):
@@ -26,7 +27,7 @@ def get_votes(timestamp):
 
 @timer.job(interval=timedelta(minutes=UPDATE_INTERVAL))
 def update_db():
-    db = DB('votes.db')
+    db = DB(DB_FILE)
     db.create_tables()
 
     print('Updating db...')
