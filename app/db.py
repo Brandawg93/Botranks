@@ -32,10 +32,11 @@ def get_vote_type(body):
 
 
 class DB:
-    def __init__(self, file, debug=False):
+    def __init__(self, file, vacuum=False, debug=False):
         self.conn = sqlite3.connect(file)
         self.debug = debug
-        self._vacuum()
+        if vacuum:
+            self._vacuum()
 
     def _vacuum(self):
         c = self.conn.cursor()

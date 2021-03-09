@@ -3,11 +3,14 @@ from db import DB
 from datetime import datetime
 from timeloop import Timeloop
 from datetime import timedelta
+import sys
+import time
 
 timer = Timeloop()
 api = PushshiftAPI()
 
 UPDATE_INTERVAL = 10
+YEAR_IN_SECONDS = 31556926
 DB_FILE = '../votes.db'
 
 
@@ -27,11 +30,18 @@ def get_votes(timestamp):
 
 @timer.job(interval=timedelta(minutes=UPDATE_INTERVAL))
 def update_db():
-    db = DB(DB_FILE)
+    backfill = '--backfill' in sys.argv
+    vacuum = '--vacuum' in sys.argv
+    db = DB(DB_FILE, vacuum=vacuum, debug=backfill)
     db.create_tables()
 
-    print('Updating db...')
-    last_update = db.get_last_updated_timestamp()
+    if backfill:
+        print('Backfilling db...')
+        last_update = int(time.time()) - YEAR_IN_SECONDS
+    else:
+        print('Updating db...')
+        last_update = db.get_last_updated_timestamp()
+
     votes = get_votes(last_update)
     num_of_updates = db.add_votes(votes)
     now = datetime.now()
@@ -42,4 +52,5 @@ def update_db():
 
 if __name__ == "__main__":
     update_db()
-    timer.start(block=True)
+    if '--backfill' not in sys.argv:
+        timer.start(block=True)
