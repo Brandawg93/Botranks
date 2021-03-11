@@ -97,8 +97,34 @@ class DB:
         else:
             return None
 
+    def add_bot(self, name):
+        """Add bots to db."""
+        c = self.conn.cursor()
+        r = praw.Reddit(
+            client_id=REDDIT_CLIENT_ID,
+            client_secret=REDDIT_CLIENT_SECRET,
+            password=REDDIT_PASSWORD,
+            user_agent='mobile:botranker:0.1 (by /u/brandawg93)',
+            username=REDDIT_USERNAME)
+
+        try:
+            bot = r.redditor(name)
+            try:
+                if self.debug:
+                    print('Updating bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
+                                                                                         bot.link_karma))
+                # Insert a row of data
+                data = [str(bot.name), bot.comment_karma, bot.link_karma]
+                c.execute("INSERT INTO bots VALUES (?, ?, ?)", data)
+            except sqlite3.IntegrityError:
+                data = [bot.comment_karma, bot.link_karma, str(bot.name)]
+                c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
+
+        except ClientException as e:
+            print(e)
+
     def add_votes(self, votes):
-        """Update bots in db."""
+        """Add votes to db."""
         c = self.conn.cursor()
         updates = 1
         bots = []
@@ -113,13 +139,15 @@ class DB:
             vote_type = get_vote_type(vote.body)
             try:
                 parent = next(r.info(fullnames=[vote.parent_id]), None)
-                if parent and parent.author and parent.author not in bots:
-                    bots.append(parent.author)
+                if parent and parent.author:
+                    if parent.author not in bots:
+                        bots.append(parent.author)
+                        self.add_bot(parent.author)
                     try:
                         if self.debug:
-                            print('Adding vote {} with id={}, bot={}, voter={}.'.format(updates, vote.id,
-                                                                                        parent.author.name,
-                                                                                        vote.author))
+                            print('Adding vote {} with id={}, bot={}, vote={}.'.format(updates, vote.id,
+                                                                                       parent.author.name,
+                                                                                       vote_type.name[0]))
                         # Insert a row of data
                         c.execute("INSERT INTO votes VALUES (?, ?, ?, ?, ?, ?)",
                                   [parent.author.name,
@@ -133,21 +161,6 @@ class DB:
                         self.conn.commit()
                     except sqlite3.IntegrityError:
                         pass
-            except ClientException as e:
-                print(e)
-        for bot in bots:
-            try:
-                user = r.redditor(bot)
-                try:
-                    if self.debug:
-                        print('Updating bot {} with comment karma={}, link karma={}.'.format(user.name, user.comment_karma,
-                                                                                             user.link_karma))
-                    # Insert a row of data
-                    data = [str(user.name), user.comment_karma, user.link_karma]
-                    c.execute("INSERT INTO bots VALUES (?, ?, ?)", data)
-                except sqlite3.IntegrityError:
-                    data = [user.comment_karma, user.link_karma, str(user.name)]
-                    c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
             except ClientException as e:
                 print(e)
 
