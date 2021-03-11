@@ -89,10 +89,11 @@ async def get_ranks(after='1y'):
     epoch = get_epoch(after)
     ranks = []
     db = DB(DB_FILE)
-    data = db.get_ranks(epoch)
+    await db.connect()
+    data = await db.get_ranks(epoch)
     rank = 0
 
-    for row in data:
+    async for row in data:
         bot, link_karma, comment_karma, good_bots, bad_bots, score = row
         rank += 1
         ranks.append(
@@ -106,8 +107,16 @@ async def get_ranks(after='1y'):
                 'link_karma': link_karma
             }
         )
-    db.close()
+    await db.close()
     return ranks
+
+
+async def get_latest_vote():
+    db = DB(DB_FILE)
+    await db.connect()
+    last_update = await db.get_lastest_vote()
+    await db.close()
+    return last_update
 
 
 def _create_top_chart_dataset(data):
@@ -143,25 +152,28 @@ def _create_top_chart_dataset(data):
 async def get_top_subs(after='1y'):
     epoch = get_epoch(after)
     db = DB(DB_FILE)
-    data = db.get_top_subs(epoch)
-    db.close()
+    await db.connect()
+    data = await db.get_top_subs(epoch)
+    await db.close()
     return _create_top_chart_dataset(data)
 
 
 async def get_top_bots(after='1y'):
     epoch = get_epoch(after)
     db = DB(DB_FILE)
-    data = db.get_top_bots(epoch)
-    db.close()
+    await db.connect()
+    data = await db.get_top_bots(epoch)
+    await db.close()
     return _create_top_chart_dataset(data)
 
 
 async def get_pie(after='1y'):
     epoch = get_epoch(after)
     db = DB(DB_FILE)
-    total_gb = db.get_vote_count(epoch, 'G')
-    total_bb = db.get_vote_count(epoch, 'B')
-    db.close()
+    await db.connect()
+    total_gb = await db.get_vote_count(epoch, 'G')
+    total_bb = await db.get_vote_count(epoch, 'B')
+    await db.close()
     return {
         'labels': ['Good Bot Votes', 'Bad Bot Votes'],
         'datasets':
@@ -177,6 +189,7 @@ async def get_pie(after='1y'):
 async def get_votes(after='1y'):
     epoch = get_epoch(after)
     db = DB(DB_FILE)
+    await db.connect()
 
     votes = {
         'labels': [],
@@ -204,8 +217,8 @@ async def get_votes(after='1y'):
     if 'd' in after:
         for i in range(24):
             results[str(i)] = {'good_votes': 0, 'bad_votes': 0}
-        data = db.get_timeline_data(epoch, '%H')
-        for row in data:
+        data = await db.get_timeline_data(epoch, '%H')
+        async for row in data:
             key, good_votes, bad_votes = row
             results[str(int(key))] = {'good_votes': good_votes, 'bad_votes': bad_votes}
 
@@ -213,16 +226,16 @@ async def get_votes(after='1y'):
         days_of_week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
         for day in days_of_week:
             results[day] = {'good_votes': 0, 'bad_votes': 0}
-        data = db.get_timeline_data(epoch, '%w')
-        for row in data:
+        data = await db.get_timeline_data(epoch, '%w')
+        async for row in data:
             key, good_votes, bad_votes = row
             results[days_of_week[int(key)]] = {'good_votes': good_votes, 'bad_votes': bad_votes}
 
     elif 'M' in after:
         for i in range(31):
             results[str(i)] = {'good_votes': 0, 'bad_votes': 0}
-        data = db.get_timeline_data(epoch, '%d')
-        for row in data:
+        data = await db.get_timeline_data(epoch, '%d')
+        async for row in data:
             key, good_votes, bad_votes = row
             results[str(int(key))] = {'good_votes': good_votes, 'bad_votes': bad_votes}
 
@@ -231,8 +244,8 @@ async def get_votes(after='1y'):
                           'October', 'November', 'December']
         for month in months_of_year:
             results[month] = {'good_votes': 0, 'bad_votes': 0}
-        data = db.get_timeline_data(epoch, '%m')
-        for row in data:
+        data = await db.get_timeline_data(epoch, '%m')
+        async for row in data:
             key, good_votes, bad_votes = row
             results[months_of_year[int(key) - 1]] = {'good_votes': good_votes, 'bad_votes': bad_votes}
 
@@ -244,7 +257,7 @@ async def get_votes(after='1y'):
         votes['datasets'][1]['data'].append(good_votes)
         votes['datasets'][0]['data'].append(bad_votes)
 
-    db.close()
+    await db.close()
     return votes
 
 
@@ -255,6 +268,11 @@ async def get_rank_data(request: Request):
     else:
         after = '1y'
     return await get_ranks(after)
+
+
+@app.get('/api/getlastupdate')
+async def get_last_update():
+    return await get_latest_vote()
 
 
 @app.get('/api/getcharts')

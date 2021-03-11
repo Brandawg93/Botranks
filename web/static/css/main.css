@@ -7,6 +7,7 @@
   footer,
   .spinner-border,
   #README,
+  #lastUpdate,
   .stats-header {
     color: white;
   }
@@ -120,9 +121,19 @@ code {
   }
 }
 
+@media (max-width: 576px) {
+  #updateContainer {
+    text-align: center;
+  }
+}
+
 .searchbar {
   border: 0;
   border-bottom: 1px solid #ced4da;
   border-radius: 0;
+  display: none;
+}
+
+#lastUpdate {
   display: none;
 }

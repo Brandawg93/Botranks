@@ -5,7 +5,7 @@ BotRanks is a website that shows the ranks of bots on Reddit.
 
 # Scoring
 
-The score is based on a confidence interval between the number of good votes and number of bad votes. The fomula is shown below:
+The score is based on a [lower bound of Wilson score](https://www.evanmiller.org/how-not-to-sort-by-average-rating.html) confidence interval between the number of good votes and number of bad votes. The fomula is shown below:
 
 ```
                                 ___________________

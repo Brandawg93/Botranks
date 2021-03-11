@@ -1,6 +1,7 @@
 function loadData(time) {
 	$.getJSON('api/getranks?after=' + time, function( ranks ) {
 		$('#loader').remove();
+		$("#lastUpdate").show();
 		let firstLoad = true;
 		let grid = $('#ranksGrid');
 		let searchbar = $('.searchbar');
@@ -69,5 +70,10 @@ $(function() {
 		$(this).addClass('active');
 		let time = $(this).data('value');
 		loadData(time, true);
+	});
+
+	$.getJSON('api/getlastupdate', function(data) {
+		let d = new Date(data * 1000);
+		$("#lastUpdate").text("Latest Vote: " + d.toLocaleDateString() + " " + d.toLocaleTimeString())
 	});
 });
