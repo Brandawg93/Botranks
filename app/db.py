@@ -5,7 +5,6 @@ from praw.exceptions import ClientException
 from enum import Enum
 from os import environ
 
-
 REDDIT_CLIENT_ID = environ['REDDIT_CLIENT_ID']
 REDDIT_CLIENT_SECRET = environ['REDDIT_CLIENT_SECRET']
 REDDIT_USERNAME = environ['REDDIT_USERNAME']
@@ -101,8 +100,8 @@ class DB:
     def add_votes(self, votes):
         """Update bots in db."""
         c = self.conn.cursor()
-        updates = 0
-        bots = {}
+        updates = 1
+        bots = []
         r = praw.Reddit(
             client_id=REDDIT_CLIENT_ID,
             client_secret=REDDIT_CLIENT_SECRET,
@@ -111,28 +110,16 @@ class DB:
             username=REDDIT_USERNAME)
 
         for vote in filter(self._filter_valid, votes):
-            if self.debug:
-                print('Attempting vote {} with id: {}...'.format(updates, vote.id))
             vote_type = get_vote_type(vote.body)
             try:
                 parent = next(r.info(fullnames=[vote.parent_id]), None)
-                if parent and parent.author:
+                if parent and parent.author and parent.author not in bots:
+                    bots.append(parent.author)
                     try:
-                        comment_karma = parent.author.comment_karma
-                        link_karma = parent.author.link_karma
-                    except:
-                        comment_karma = 0
-                        link_karma = 0
-
-                    if parent.author.name in bots:
-                        bot = bots[parent.author.name]
-                        if comment_karma > bot['comment_karma']:
-                            bot['comment_karma'] = comment_karma
-                        if link_karma > bot['link_karma']:
-                            bot['link_karma'] = link_karma
-                    else:
-                        bots[parent.author.name] = {'comment_karma': comment_karma, 'link_karma': link_karma}
-                    try:
+                        if self.debug:
+                            print('Adding vote {} with id={}, bot={}, voter={}.'.format(updates, vote.id,
+                                                                                        parent.author.name,
+                                                                                        vote.author))
                         # Insert a row of data
                         c.execute("INSERT INTO votes VALUES (?, ?, ?, ?, ?, ?)",
                                   [parent.author.name,
@@ -150,18 +137,19 @@ class DB:
                 print(e)
         for bot in bots:
             try:
-                # Insert a row of data
-                c.execute("INSERT INTO bots VALUES (?, ?, ?)",
-                          [bot,
-                           bots[bot]['comment_karma'],
-                           bots[bot]['link_karma']
-                           ])
-            except sqlite3.IntegrityError:
-                c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?",
-                          [bots[bot]['comment_karma'],
-                           bots[bot]['link_karma'],
-                           bot
-                           ])
+                user = r.redditor(bot)
+                try:
+                    if self.debug:
+                        print('Updating bot {} with comment karma={}, link karma={}.'.format(user.name, user.comment_karma,
+                                                                                             user.link_karma))
+                    # Insert a row of data
+                    data = [str(user.name), user.comment_karma, user.link_karma]
+                    c.execute("INSERT INTO bots VALUES (?, ?, ?)", data)
+                except sqlite3.IntegrityError:
+                    data = [user.comment_karma, user.link_karma, str(user.name)]
+                    c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
+            except ClientException as e:
+                print(e)
 
         return updates
 
