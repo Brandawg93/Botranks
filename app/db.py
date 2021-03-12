@@ -136,14 +136,15 @@ class DB:
             username=REDDIT_USERNAME)
 
         for vote in filter(self._filter_valid, votes):
-            vote_type = get_vote_type(vote.body)
             try:
                 parent = next(r.info(fullnames=[vote.parent_id]), None)
                 if parent and parent.author:
+                    # Only update bots once per method call
                     if parent.author not in bots:
                         bots.append(parent.author)
                         self.add_bot(parent.author)
                     try:
+                        vote_type = get_vote_type(vote.body)
                         if self.debug:
                             print('Adding vote {} with id={}, bot={}, vote={}.'.format(updates, vote.id,
                                                                                        parent.author.name,
