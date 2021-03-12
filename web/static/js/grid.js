@@ -24,7 +24,7 @@ function loadData(time) {
 						let rank = ranks.find((x) => x['bot'] === bot);
 						let page = Math.ceil(rank['rank'] / 100);
 						if (page > 1) {
-							let grid = grid.data('JSGrid');
+							let grid = $('#ranksGrid').data('JSGrid');
 							grid.openPage(page);
 						}
 						let cell = $('td:contains(\'' + bot + '\')');
