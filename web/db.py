@@ -19,7 +19,7 @@ class DB:
         # if the count is 1, then table exists
         return (await c.fetchone())[0] == 1
 
-    async def get_lastest_vote(self):
+    async def get_latest_vote(self):
         """Get the last updated time."""
         c = await self.conn.execute("SELECT timestamp from votes order by id DESC LIMIT 1")
         query = await c.fetchone()
@@ -27,6 +27,15 @@ class DB:
             return query[0]
         else:
             return None
+
+    async def get_total_votes(self, epoch):
+        """Get the total number of votes."""
+        c = await self.conn.execute("SELECT count(id) from votes where timestamp >= ?", [epoch])
+        query = await c.fetchone()
+        if query and len(query) > 0:
+            return query[0]
+        else:
+            return 0
 
     async def get_ranks(self, epoch, minvotes=3):
         """Get ranks from db."""

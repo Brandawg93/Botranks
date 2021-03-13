@@ -7,7 +7,7 @@
   footer,
   .spinner-border,
   #README,
-  #lastUpdate,
+  #updateContainer,
   .stats-header {
     color: white;
   }
@@ -134,6 +134,6 @@ code {
   display: none;
 }
 
-#lastUpdate {
+#updateContainer {
   display: none;
 }

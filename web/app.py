@@ -114,9 +114,18 @@ async def get_ranks(after='1y'):
 async def get_latest_vote():
     db = DB(DB_FILE)
     await db.connect()
-    last_update = await db.get_lastest_vote()
+    last_update = await db.get_latest_vote()
     await db.close()
     return last_update
+
+
+async def get_total_votes(after='1y'):
+    epoch = get_epoch(after)
+    db = DB(DB_FILE)
+    await db.connect()
+    total_votes = await db.get_total_votes(epoch)
+    await db.close()
+    return total_votes
 
 
 def _create_top_chart_dataset(data):
@@ -267,12 +276,11 @@ async def get_rank_data(request: Request):
         after = request.query_params['after']
     else:
         after = '1y'
-    return await get_ranks(after)
-
-
-@app.get('/api/getlastupdate')
-async def get_last_update():
-    return await get_latest_vote()
+    return {
+        'data': await get_ranks(after),
+        'latest_vote': await get_latest_vote(),
+        'vote_count': await get_total_votes(after)
+    }
 
 
 @app.get('/api/getcharts')

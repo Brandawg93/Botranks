@@ -1,7 +1,13 @@
 function loadData(time) {
-	$.getJSON('api/getranks?after=' + time, function( ranks ) {
+	$.getJSON('api/getranks?after=' + time, function( response ) {
+		let ranks = response.data;
+		let lastUpdate = $("#lastUpdate");
+		let totalVotes = $("#totalVotes");
 		$('#loader').remove();
-		$("#lastUpdate").show();
+		$("#updateContainer").show();
+		let d = new Date(response.latest_vote * 1000);
+		lastUpdate.text("Latest Vote: " + d.toLocaleDateString() + " " + d.toLocaleTimeString())
+		totalVotes.text("Total Votes: " + addCommas(response.vote_count));
 		let firstLoad = true;
 		let grid = $('#ranksGrid');
 		let searchbar = $('.searchbar');
@@ -70,10 +76,5 @@ $(function() {
 		$(this).addClass('active');
 		let time = $(this).data('value');
 		loadData(time, true);
-	});
-
-	$.getJSON('api/getlastupdate', function(data) {
-		let d = new Date(data * 1000);
-		$("#lastUpdate").text("Latest Vote: " + d.toLocaleDateString() + " " + d.toLocaleTimeString())
 	});
 });
