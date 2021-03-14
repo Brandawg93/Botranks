@@ -5,7 +5,7 @@ BotRanks is a website that shows the ranks of bots on Reddit.
 
 # Scoring
 
-The score is based on a [lower bound of Wilson score](https://www.evanmiller.org/how-not-to-sort-by-average-rating.html) confidence interval between the number of good votes and number of bad votes. The fomula is shown below:
+The score is based on the [lower bound of a Wilson score](https://www.evanmiller.org/how-not-to-sort-by-average-rating.html) confidence interval between the number of good votes and number of bad votes. The fomula is shown below:
 
 ```
                                 ___________________
@@ -23,14 +23,21 @@ G = Good Votes
 B = Bad Votes
 ```
 
-# Badges
+# Badges for Developers
 Badges can be created using [shields.io](https://shields.io/). Here are a few examples:
 
 [![GifReversingBot](https://img.shields.io/endpoint?url=https://botranks.com/api/getbadge/GifReversingBot)](https://github.com/pmdevita/GifReversingBot)
 [![gifendore](https://img.shields.io/endpoint?url=https://botranks.com/api/getbadge/gifendore&label=gifendore%20rank)](https://github.com/Brandawg93/Gifendore)
 
-#### Note:
-The site is currently in development and more will come soon! Feel free to look around and submit issues or feedback on the [Github](https://github.com/Brandawg93/Botranks).
+# FAQ
+**Q:** How do I vote?
 
+**A:** Simply reply to a bot with "Good bot" or "Bad bot" to have your vote counted in the rankings. It may take up to 10 minutes to see your vote reflected on the page.
+
+**Q:** How does this site handle vote manipulation?
+
+**A:** BotRanks uses time to mitigate vote manipulation. The site can be filtered between day/week/month/year allowing viewers to see which bots have had a recent rise in the rankings and which have been consistently ranked in the top. All votes stop being counted exactly one year from when they were cast to allow new bots a chance to climb the ranks.
 # Support BotRanks
 This website was made to keep Redditors informed on bots both good and bad. If you wish to show support for its continued development, consider [buying me a coffee](https://www.buymeacoffee.com/L1FgZTD).
+
+**Note:** The site is currently in development and more will come soon! Feel free to look around and submit issues or feedback on the [Github](https://github.com/Brandawg93/Botranks).
