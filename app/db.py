@@ -122,6 +122,8 @@ class DB:
 
         except ClientException as e:
             print(e)
+        except AttributeError:
+            pass
 
     def add_votes(self, votes):
         """Add votes to db."""
