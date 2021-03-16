@@ -2,6 +2,7 @@ import re
 import praw
 import sqlite3
 from praw.exceptions import ClientException
+from prawcore.exceptions import NotFound
 from enum import Enum
 from os import environ
 
@@ -120,7 +121,7 @@ class DB:
                 data = [bot.comment_karma, bot.link_karma, str(bot.name)]
                 c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
 
-        except ClientException as e:
+        except (ClientException, NotFound) as e:
             print(e)
         except AttributeError:
             pass
@@ -164,7 +165,7 @@ class DB:
                         self.conn.commit()
                     except sqlite3.IntegrityError:
                         pass
-            except ClientException as e:
+            except (ClientException, NotFound) as e:
                 print(e)
 
         return updates
