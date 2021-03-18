@@ -39,24 +39,24 @@ class DB:
 
     async def get_ranks(self, epoch, minvotes=3):
         """Get ranks from db."""
-        c = await self.conn.execute('''select bot,
-                    link_karma,
-                    comment_karma,
-                    good_votes,
-                    bad_votes,
-                    ROUND(((good_votes + 1.9208) / (good_votes + bad_votes) - 1.96 * power(
-                    (good_votes * bad_votes) / (good_votes + bad_votes) + 0.9604, 0.5) / (good_votes + bad_votes)) / (
-                    1 + 3.8416 / (good_votes + bad_votes)), 4) as score
-                        from (select v.bot,
-                                max(b.link_karma) as link_karma,
-                                max(b.comment_karma) as comment_karma,
-                                sum(CASE WHEN v.vote = 'G' THEN 1 ELSE 0 END) as good_votes,
-                                sum(CASE WHEN v.vote = 'B' THEN 1 ELSE 0 END) as bad_votes
-                            from (select * from votes where timestamp >= ?) v
-                            inner join bots b on v.bot = b.bot
-                            group by v.bot) v2
-                        where good_votes + bad_votes >= ?
-                        order by score desc, good_votes desc, bad_votes''', [epoch, minvotes])
+        c = await self.conn.execute('''select v.bot,
+                    b.link_karma,
+                    b.comment_karma,
+                    v.good_votes,
+                    v.bad_votes,
+                    ROUND(((v.good_votes + 1.9208) / (v.good_votes + v.bad_votes) - 1.96 * power(
+                    (v.good_votes * v.bad_votes) / (v.good_votes + v.bad_votes) + 0.9604, 0.5) /
+                    (v.good_votes + v.bad_votes)) / (
+                    1 + 3.8416 / (v.good_votes + v.bad_votes)), 4) as score
+                        from (select bot,
+                                sum(CASE WHEN vote = 'G' THEN 1 ELSE 0 END) as good_votes,
+                                sum(CASE WHEN vote = 'B' THEN 1 ELSE 0 END) as bad_votes
+                            from votes
+                            where timestamp >= ?
+                            group by bot) v
+                        inner join bots b on v.bot = b.bot
+                        where v.good_votes + v.bad_votes >= ?
+                        order by score desc, v.good_votes desc, v.bad_votes''', [epoch, minvotes])
         return c
 
     async def get_top_subs(self, epoch, limit=5):
@@ -74,8 +74,9 @@ class DB:
                 from (select bot,
                         sum(CASE WHEN vote = 'G' THEN 1 ELSE 0 END) as good_votes,
                         sum(CASE WHEN vote = 'B' THEN 1 ELSE 0 END) as bad_votes
-                    from (select * from votes where timestamp >= ?) v
-                    group by bot) v2
+                    from votes
+                    where timestamp >= ?
+                    group by bot) v
                 group by bot
                 order by round((good_votes + 1) / (bad_votes + 1), 2) DESC
                 limit ?''', [epoch, limit])
