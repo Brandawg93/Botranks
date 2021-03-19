@@ -129,7 +129,7 @@ class DB:
     def add_votes(self, votes):
         """Add votes to db."""
         c = self.conn.cursor()
-        updates = 1
+        updates = 0
         bots = []
         r = praw.Reddit(
             client_id=REDDIT_CLIENT_ID,
@@ -148,10 +148,6 @@ class DB:
                         self.add_bot(parent.author)
                     try:
                         vote_type = get_vote_type(vote.body)
-                        if self.debug:
-                            print('Adding vote {} with id={}, bot={}, vote={}.'.format(updates, vote.id,
-                                                                                       parent.author.name,
-                                                                                       vote_type.name[0]))
                         # Insert a row of data
                         c.execute("INSERT INTO votes VALUES (?, ?, ?, ?, ?, ?)",
                                   [parent.author.name,
@@ -162,6 +158,11 @@ class DB:
                                    vote.author
                                    ])
                         updates += 1
+                        if self.debug:
+                            print('Adding vote {} with id={}, bot={}, vote={}.'.format(updates, vote.id,
+                                                                                       parent.author.name,
+                                                                                       vote_type.name[0]))
+
                         self.conn.commit()
                     except sqlite3.IntegrityError:
                         pass
