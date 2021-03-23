@@ -27,6 +27,11 @@ let addCommas = function addCommas(nStr)
 };
 
 $(function() {
+	$('.dropdown-menu a').click(function() {
+		$(this).parent().children().removeClass('active');
+		$(this).addClass('active');
+	});
+
 	$(window).scroll(function () {
 		if ($(this).scrollTop() > 50) {
 			$('#back-to-top').fadeIn();

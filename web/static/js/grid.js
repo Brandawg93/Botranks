@@ -1,5 +1,5 @@
-function loadData(time) {
-	$.getJSON('api/getranks?after=' + time, function( response ) {
+function loadData(time, sort) {
+	$.getJSON('api/getranks?after=' + time + '&sort=' + sort, function( response ) {
 		let ranks = response.data;
 		let lastUpdate = $("#lastUpdate");
 		let totalVotes = $("#totalVotes");
@@ -71,10 +71,15 @@ function loadData(time) {
 $(function() {
 	loadData('1y');
 
-	$('.dropdown-menu a').click(function() {
-		$('.dropdown-menu a').removeClass('active');
-		$(this).addClass('active');
+	$('#dropdownDuration a').click(function() {
 		let time = $(this).data('value');
-		loadData(time, true);
+		let sort = $('#dropdownSort .active').data('value');
+		loadData(time, sort);
+	});
+
+	$('#dropdownSort a').click(function() {
+		let time = $('#dropdownDuration .active').data('value');
+		let sort = $(this).data('value');
+		loadData(time, sort);
 	});
 });

@@ -85,22 +85,22 @@ async def get_bot_rank(bot: str):
     }
 
 
-async def get_ranks(after='1y'):
+async def get_ranks(after='1y', sort='top'):
     epoch = get_epoch(after)
     ranks = []
     db = DB(DB_FILE)
     await db.connect()
-    data = await db.get_ranks(epoch)
+    data = await db.get_ranks(epoch, sort)
     rank = 0
 
     async for row in data:
-        bot, link_karma, comment_karma, good_bots, bad_bots, score = row
+        bot, link_karma, comment_karma, good_bots, bad_bots, top_score, hot_score, controversial_score = row
         rank += 1
         ranks.append(
             {
                 'rank': rank,
                 'bot': bot,
-                'score': score,
+                'score': top_score,
                 'good_bots': good_bots,
                 'bad_bots': bad_bots,
                 'comment_karma': comment_karma,
@@ -276,8 +276,12 @@ async def get_rank_data(request: Request):
         after = request.query_params['after']
     else:
         after = '1y'
+    if 'sort' in request.query_params:
+        sort = request.query_params['sort']
+    else:
+        sort = 'top'
     return {
-        'data': await get_ranks(after),
+        'data': await get_ranks(after, sort),
         'latest_vote': await get_latest_vote(),
         'vote_count': await get_total_votes(after)
     }

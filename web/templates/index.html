@@ -58,10 +58,20 @@
                 </ul>
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarSort" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Sort By
+                        </a>
+                    <div class="dropdown-menu" id="dropdownSort" aria-labelledby="navbarSort">
+                        <a class="dropdown-item active" href="#" data-value="top">Top</a>
+                        <a class="dropdown-item" href="#" data-value="hot">Hot</a>
+                        <a class="dropdown-item" href="#" data-value="controversial">Controversial</a>
+                    </div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDuration" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Duration
                         </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <div class="dropdown-menu" id="dropdownDuration" aria-labelledby="navbarDuration">
                         <a class="dropdown-item" href="#" data-value="1d">Day</a>
                         <a class="dropdown-item" href="#" data-value="1w">Week</a>
                         <a class="dropdown-item" href="#" data-value="1M">Month</a>
