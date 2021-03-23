@@ -91,14 +91,12 @@ async def get_ranks(after='1y', sort='top'):
     db = DB(DB_FILE)
     await db.connect()
     data = await db.get_ranks(epoch, sort)
-    rank = 0
+    rank = 1
 
     async for row in data:
         bot, link_karma, comment_karma, good_bots, bad_bots, top_score, hot_score, controversial_score = row
-        rank += 1
         ranks.append(
             {
-                'rank': rank,
                 'bot': bot,
                 'score': top_score,
                 'good_bots': good_bots,
@@ -108,6 +106,9 @@ async def get_ranks(after='1y', sort='top'):
             }
         )
     await db.close()
+    for bot in sorted(ranks, key=lambda x: x['score'], reverse=True):
+        bot['rank'] = rank
+        rank += 1
     return ranks
 
 
