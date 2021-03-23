@@ -50,18 +50,16 @@ class DB:
                     (v.good_votes * v.bad_votes) / (v.good_votes + v.bad_votes) + 0.9604, 0.5) /
                     (v.good_votes + v.bad_votes)) / (
                     1 + 3.8416 / (v.good_votes + v.bad_votes)), 4) as top,
-                    ROUND(((v.good_time + 1.9208) / (v.good_time + v.bad_time) - 1.96 * power(
+                    ((v.good_time + 1.9208) / (v.good_time + v.bad_time) - 1.96 * power(
                     (v.good_time * v.bad_time) / (v.good_time + v.bad_time) + 0.9604, 0.5) /
                     (v.good_time + v.bad_time)) / (
-                    1 + 3.8416 / (v.good_time + v.bad_time)), 4) as hot,
+                    1 + 3.8416 / (v.good_time + v.bad_time)) as hot,
                     (v.good_votes + v.bad_votes) / (abs(v.good_votes - v.bad_votes) + 1) as controversial
                         from (select bot,
                                 count(CASE WHEN vote = 'G' THEN 1 END) as good_votes,
                                 count(CASE WHEN vote = 'B' THEN 1 END) as bad_votes,
-                                count(CASE WHEN vote = 'G' THEN 1 END)
-                                    + (avg(CASE WHEN vote = 'G' THEN timestamp ELSE 0 END) / 1000000) as good_time,
-                                count(CASE WHEN vote = 'B' THEN 1 END)
-                                    + (avg(CASE WHEN vote = 'B' THEN timestamp ELSE 0 END) / 1000000) as bad_time
+                                sum(CASE WHEN vote = 'G' THEN (timestamp / 1000000) ELSE 0 END) as good_time,
+                                sum(CASE WHEN vote = 'B' THEN (timestamp / 1000000) ELSE 0 END) as bad_time
                             from votes
                             where timestamp >= ?
                             group by bot) v
