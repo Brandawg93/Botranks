@@ -51,6 +51,9 @@ def update_db():
 
 
 if __name__ == "__main__":
-    update_db()
+    try:
+        update_db()
+    except KeyboardInterrupt:
+        print('Exiting...')
     if '--backfill' not in sys.argv:
         timer.start(block=True)

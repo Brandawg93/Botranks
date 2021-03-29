@@ -2,7 +2,7 @@ import re
 import praw
 import sqlite3
 from praw.exceptions import ClientException
-from prawcore.exceptions import NotFound
+from prawcore.exceptions import NotFound, ResponseException
 from enum import Enum
 from os import environ
 
@@ -121,10 +121,12 @@ class DB:
                 data = [bot.comment_karma, bot.link_karma, str(bot.name)]
                 c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
 
-        except (ClientException, NotFound) as e:
-            print(e)
+        except ResponseException as e:
+            print('Received {} for {}. Skipping...'.format(e.response.status_code, name))
         except AttributeError:
             pass
+        except Exception as e:
+            print(e)
 
     def add_votes(self, votes):
         """Add votes to db."""
@@ -166,7 +168,9 @@ class DB:
                         self.conn.commit()
                     except sqlite3.IntegrityError:
                         pass
-            except (ClientException, NotFound) as e:
+            except ResponseException as e:
+                print('Received {} for {}. Skipping...'.format(e.response.status_code, vote.parent_id))
+            except Exception as e:
                 print(e)
 
         return updates
