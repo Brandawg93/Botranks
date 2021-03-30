@@ -80,6 +80,11 @@ $(function() {
 	$('#dropdownSort a').click(function() {
 		let time = $('#dropdownDuration .active').data('value');
 		let sort = $(this).data('value');
+		if (sort === 'hot') {
+			$('.dropdown-duration').hide();
+		} else {
+			$('.dropdown-duration').show();
+		}
 		loadData(time, sort);
 	});
 });

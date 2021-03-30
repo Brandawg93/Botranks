@@ -1,4 +1,5 @@
 import aiosqlite
+from datetime import datetime
 
 
 class DB:
@@ -10,6 +11,7 @@ class DB:
     async def connect(self):
         self.conn = await aiosqlite.connect(self.file)
         await self.conn.create_function("power", 2, lambda x, y: x ** y)
+        await self.conn.create_function("hot_weight", 2, lambda x, y: float(x) / float((x - y)**2))
 
     async def _check_if_exists(self, table):
         # get the count of tables with the name
@@ -41,6 +43,7 @@ class DB:
         """Get ranks from db."""
         if sort not in ['top', 'hot', 'controversial']:
             sort = 'top'
+        now = int((datetime.now()).strftime('%s'))
         c = await self.conn.execute('''select v.bot,
                     b.link_karma,
                     b.comment_karma,
@@ -58,14 +61,14 @@ class DB:
                         from (select bot,
                                 count(CASE WHEN vote = 'G' THEN 1 END) as good_votes,
                                 count(CASE WHEN vote = 'B' THEN 1 END) as bad_votes,
-                                sum(CASE WHEN vote = 'G' THEN (timestamp / 1000000) ELSE 0 END) as good_time,
-                                sum(CASE WHEN vote = 'B' THEN (timestamp / 1000000) ELSE 0 END) as bad_time
+                                sum(CASE WHEN vote = 'G' THEN hot_weight({}, timestamp) ELSE 0 END) as good_time,
+                                sum(CASE WHEN vote = 'B' THEN hot_weight({}, timestamp) ELSE 0 END) as bad_time
                             from votes
                             where timestamp >= ?
                             group by bot) v
                         inner join bots b on v.bot = b.bot
                         where v.good_votes + v.bad_votes >= ?
-                        order by {} desc, v.good_votes desc, v.bad_votes'''.format(sort), [epoch, minvotes])
+                        order by {} desc, v.good_votes desc, v.bad_votes'''.format(now, now, sort), [epoch, minvotes])
         return c
 
     async def get_top_subs(self, epoch, limit=5):

@@ -86,6 +86,8 @@ async def get_bot_rank(bot: str):
 
 
 async def get_ranks(after='1y', sort='top'):
+    if sort == 'hot':
+        after = '1y'
     epoch = get_epoch(after)
     ranks = []
     db = DB(DB_FILE)
