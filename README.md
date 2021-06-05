@@ -29,6 +29,9 @@ Badges can be created using [shields.io](https://shields.io/). Here are a few ex
 [![GifReversingBot](https://img.shields.io/endpoint?url=https://botranks.com/api/getbadge/GifReversingBot)](https://github.com/pmdevita/GifReversingBot)
 [![gifendore](https://img.shields.io/endpoint?url=https://botranks.com/api/getbadge/gifendore&label=gifendore%20rank)](https://github.com/Brandawg93/Gifendore)
 
+# GraphQL API for Developers
+BotRanks uses [GraphQL](https://graphql.org/) for its API. Feel free to look around on the [Graph*i*QL page](https://botranks.com/graphql).
+
 # FAQ
 **Q:** How do I vote?
 
