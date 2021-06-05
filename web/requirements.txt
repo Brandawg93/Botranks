@@ -3,3 +3,5 @@ uvicorn
 jinja2
 aiofiles
 aiosqlite
+aiocache
+graphene

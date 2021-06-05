@@ -1,13 +1,49 @@
-function loadData(time, sort) {
-	$.getJSON('api/getranks?after=' + time + '&sort=' + sort, function( response ) {
-		let ranks = response.data;
+function loadData(after, sort) {
+	let query = `query ($after:String, $sort:String) {
+	  bots(after: $after, sort: $sort) {
+		rank
+		name
+		score
+		votes {
+		  good
+		  bad
+		}
+		karma {
+		  link
+		  comment
+		}
+	  }
+	  stats(after: $after) {
+		votes {
+		  latest
+		  count
+		}
+  	  }
+	}`;
+	$.ajax({
+		url: "/graphql",
+		method: "POST",
+		contentType: "application/json",
+		data: JSON.stringify({
+			query: query,
+			variables: {
+				after: after,
+				sort: sort
+			}
+		})
+	}).done(function(response) {
+		let data = response.data;
+		let bots = data['bots'];
+		let stats = data['stats'];
+		let latestVote = stats['votes']['latest'];
+		let voteCount = stats['votes']['count'];
 		let lastUpdate = $("#lastUpdate");
 		let totalVotes = $("#totalVotes");
 		$('#loader').remove();
 		$("#updateContainer").show();
-		let d = new Date(response.latest_vote * 1000);
+		let d = new Date(latestVote * 1000);
 		lastUpdate.text("Latest Vote: " + d.toLocaleDateString() + " " + d.toLocaleTimeString())
-		totalVotes.text("Total Votes: " + addCommas(response.vote_count));
+		totalVotes.text("Total Votes: " + addCommas(voteCount));
 		let firstLoad = true;
 		let grid = $('#ranksGrid');
 		let searchbar = $('.searchbar');
@@ -19,7 +55,7 @@ function loadData(time, sort) {
 			paging: true,
 			pageSize: 100,
 			pageButtonCount: 3,
-			data: ranks,
+			data: bots,
 			noDataContent: 'Bot not found',
 			onRefreshed() {
 				if (firstLoad) {
@@ -27,11 +63,11 @@ function loadData(time, sort) {
 					searchbar.show();
 					let bot = getUrlParameter('bot');
 					if (typeof bot !== 'undefined') {
-						let rank = ranks.find((x) => x['bot'] === bot);
+						let rank = bots.find((x) => x['name'] === bot);
 						let page = Math.ceil(rank['rank'] / 100);
 						if (page > 1) {
-							let grid = $('#ranksGrid').data('JSGrid');
-							grid.openPage(page);
+							let gridData = grid.data('JSGrid');
+							gridData.openPage(page);
 						}
 						let cell = $('td:contains(\'' + bot + '\')');
 						if (cell.length !== 0) {
@@ -43,24 +79,24 @@ function loadData(time, sort) {
 				}
 			},
 			rowClick(e) {
-				let bot = e.item.bot;
+				let bot = e.item['name'];
 				window.open('https://www.reddit.com/u/' + bot);
 			},
 			fields: [
 				{ name: 'rank', title: 'Rank', type: 'number', width: 50 },
-				{ name: 'bot', title: 'Bot Name', type: 'text', width: 200 },
+				{ name: 'name', title: 'Bot Name', type: 'text', width: 200 },
 				{ name: 'score', title: 'Score', type: 'number', width: 75 },
-				{ name: 'good_bots', title: 'Good Bot Votes', type: 'number', width: 75 },
-				{ name: 'bad_bots', title: 'Bad Bot Votes', type: 'number', width: 75 },
-				{ name: 'comment_karma', title: 'Comment Karma', type: 'number', width: 75 },
-				{ name: 'link_karma', title: 'Link Karma', type: 'number', width: 75 }
+				{ name: 'votes.good', title: 'Good Bot Votes', type: 'number', width: 75 },
+				{ name: 'votes.bad', title: 'Bad Bot Votes', type: 'number', width: 75 },
+				{ name: 'karma.comment', title: 'Comment Karma', type: 'number', width: 75 },
+				{ name: 'karma.link', title: 'Link Karma', type: 'number', width: 75 }
 			]
 		}).data('JSGrid');
 
 		searchbar.keyup(function() {
 			let val = $(this).val();
-			let filtered = $.grep( ranks, function( rank, i ) {
-				let bot = rank.bot.toLowerCase();
+			let filtered = $.grep( bots, function( rank ) {
+				let bot = rank['name'].toLowerCase();
 				return bot.startsWith(val.toLowerCase());
 			});
 			grid.jsGrid('option', 'data', filtered);

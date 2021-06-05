@@ -1,3 +1,8 @@
+let gridChart;
+let pieChart;
+let topBotsChart;
+let topSubsChart;
+
 function refreshCharts(data, time) {
 	let votes = data['votes'];
 	let pie = data['pie'];
@@ -12,110 +17,108 @@ function refreshCharts(data, time) {
 		linePoint = new Date().getHours();
 	} else if (time.indexOf('w') > -1) {
 		let d = new Date();
-		let weekday = new Array(7);
-		weekday[0] = 'Sunday';
-		weekday[1] = 'Monday';
-		weekday[2] = 'Tuesday';
-		weekday[3] = 'Wednesday';
-		weekday[4] = 'Thursday';
-		weekday[5] = 'Friday';
-		weekday[6] = 'Saturday';
+		let weekday = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 		linePoint = weekday[d.getDay()];
 	} else if (time.indexOf('M') > -1) {
 		linePoint = new Date().getDate();
 	} else if (time.indexOf('y') > -1) {
 		let d = new Date();
-		let month = new Array(12);
-		month[0] = 'January';
-		month[1] = 'February';
-		month[2] = 'March';
-		month[3] = 'April';
-		month[4] = 'May';
-		month[5] = 'June';
-		month[6] = 'July';
-		month[6] = 'August';
-		month[6] = 'September';
-		month[6] = 'October';
-		month[6] = 'November';
-		month[6] = 'December';
+		let month = ['January', 'February', 'March', 'April', 'May', 'June',
+  						'July', 'August', 'September', 'October', 'November', 'December'];
 		linePoint = month[d.getMonth()];
 	}
-	new Chart(ctx, {
+	gridChart = new Chart(ctx, {
 		type: 'line',
 		data: votes,
 		options: {
-			responsive: true,
 			maintainAspectRatio: false,
 			scales: {
-				xAxes: [{
-					gridLines: {
+				x: {
+					grid: {
 						color: '#d9d9d9'
 					},
-					scaleLabel: {
+					title: {
 						display: true,
-						labelString: 'Timeline'
+						text: 'Timeline'
 					}
-				}],
-				yAxes: [{
-					gridLines: {
+				},
+				y: {
+					grid: {
 						color: '#d9d9d9'
 					},
-					scaleLabel: {
+					title: {
 						display: true,
-						labelString: 'Number of Votes'
+						text: 'Number of Votes'
 					}
-				}]
+				}
 			},
-			annotation: {
-				annotations: [
-					{
-						type: 'line',
-						mode: 'vertical',
-						scaleID: 'x-axis-0',
-						value: linePoint,
-						borderColor: 'red',
-						label: {
-							content: 'Now',
-							enabled: true,
-							position: 'top'
+			plugins: {
+				annotation: {
+					annotations: {
+						now: {
+							type: 'line',
+							xMin: linePoint,
+							xMax: linePoint,
+							borderColor: 'red',
+							label: {
+								content: 'Now',
+								enabled: true,
+								position: 'start'
+							}
 						}
 					}
-				]
+				}
 			}
 		}
 	});
-	new Chart(ctxPie, {
+	pieChart = new Chart(ctxPie, {
 		type: 'doughnut',
 		data: pie,
 		options: {
-			responsive: true,
 			maintainAspectRatio: false
 		}
 	});
 	let polarOptions = {
-			scale: {
-				gridLines: {
-					color: '#d9d9d9'
+			scales: {
+				radial: {
+					grid: {
+						color: '#d9d9d9'
+					}
 				}
 			},
-			responsive: true,
 			maintainAspectRatio: false
 		};
-	new Chart(ctxTopBots, {
+	topBotsChart = new Chart(ctxTopBots, {
 		type: 'polarArea',
 		data: topBots,
 		options: polarOptions
 	});
-	new Chart(ctxSubsBots, {
+	topSubsChart = new Chart(ctxSubsBots, {
 		type: 'polarArea',
 		data: topSubs,
 		options: polarOptions
 	});
 }
 
+function destroyAllCharts() {
+	if (gridChart) {
+		gridChart.destroy();
+	}
+	if (pieChart) {
+		pieChart.destroy();
+	}
+	if (topBotsChart) {
+		topBotsChart.destroy();
+	}
+	if (topSubsChart) {
+		topSubsChart.destroy();
+	}
+}
+
 function loadData(time) {
 	$.getJSON( 'api/getcharts?after=' + time, function( data ) {
         $('#loader').remove();
+        destroyAllCharts();
         refreshCharts(data, time);
 	});
 }
