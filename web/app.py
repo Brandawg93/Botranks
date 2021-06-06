@@ -7,8 +7,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import FileResponse
 from starlette.graphql import GraphQLApp
 from graphene import ObjectType, Int, List, String, Field
-from models import Bot, Stats, VoteType
-from utils import get_ranks, get_stats, get_votes, get_pie, get_top_bots, get_top_subs
+from models import Bot, Stats, Sub, VoteType, Graph
+from utils import get_ranks, get_stats, get_graph, get_subs
 
 
 class Query(ObjectType):
@@ -17,7 +17,14 @@ class Query(ObjectType):
                 after=String(default_value="1y"),
                 sort=String(default_value="top"),
                 limit=Int(),
-                description="Lists of all ranks")
+                description="List of all ranks")
+    subs = List(Sub,
+                after=String(default_value="1y"),
+                limit=Int(),
+                description="List of all subreddits with votes")
+    graph = Field(Graph,
+                  after=String(default_value="1y"),
+                  description="Graph data")
     stats = Field(Stats,
                   after=String(default_value="1y"),
                   vote_type=VoteType())
@@ -34,6 +41,12 @@ class Query(ObjectType):
 
     async def resolve_stats(self, info, after, vote_type=None):
         return await get_stats(after, vote_type)
+
+    async def resolve_subs(self, info, after, limit=None):
+        return get_subs(after, limit)
+
+    async def resolve_graph(self, info, after):
+        return get_graph(after)
 
 
 app = FastAPI()
@@ -92,24 +105,4 @@ async def get_bot_rank(bot: str):
         'label': rank.name,
         'message': str(rank.rank),
         'color': 'orange'
-    }
-
-
-@app.get('/api/getcharts')
-async def get_chart_data(request: Request):
-    if 'after' in request.query_params:
-        after = request.query_params['after']
-    else:
-        after = '1y'
-
-    votes = await get_votes(after)
-    pie = await get_pie(after)
-    top_subs = await get_top_subs(after)
-    top_bots = await get_top_bots(after)
-
-    return {
-        'votes': votes,
-        'pie': pie,
-        'top_bots': top_bots,
-        'top_subs': top_subs
     }

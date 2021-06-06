@@ -1,4 +1,4 @@
-from graphene import ObjectType, String, Float, Int, Enum, Field
+from graphene import ObjectType, String, Float, Int, Enum, Field, List
 
 
 class VoteType(Enum):
@@ -25,6 +25,11 @@ class Votes(ObjectType):
     bad = Int()
 
 
+class Graph(ObjectType):
+    labels = List(String)
+    votes = List(Votes)
+
+
 class Karma(ObjectType):
     link = Int()
     comment = Int()
@@ -36,3 +41,8 @@ class Bot(ObjectType):
     score = Float()
     votes = Field(Votes)
     karma = Field(Karma)
+
+
+class Sub(ObjectType):
+    name = String()
+    votes = Field(Votes)

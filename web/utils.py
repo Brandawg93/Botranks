@@ -1,6 +1,6 @@
 import datetime
 from db import DB
-from models import Bot, Stats, Votes, Karma, VotesStats, BotsStats
+from models import Bot, Stats, Votes, Karma, VotesStats, BotsStats, Sub, Graph
 from aiocache import cached
 from aiocache.serializers import PickleSerializer
 
@@ -77,103 +77,31 @@ async def get_stats(after='1y', vote_type=None):
     return stats
 
 
-def _create_top_chart_dataset(data):
-    top = {
-        'labels': [],
-        'datasets':
-            [
-                {
-                    'data': [],
-                    'backgroundColor': [
-                        'rgba(0, 255, 0, 1)',
-                        'rgba(255, 0, 0, 1)',
-                        'rgba(0, 0, 255, 1)',
-                        'rgba(255, 255, 0, 1)',
-                        'rgba(255, 0, 255, 1)'
-                    ]
-                }
-            ]
-    }
-    for row in data:
-        top['labels'].append(row[0])
-        top['datasets'][0]['data'].append(row[1])
-    return top
-
-
 @cached(ttl=TTL, serializer=PickleSerializer())
-async def get_top_subs(after='1y'):
+async def get_subs(after='1y', limit=None):
     epoch = get_epoch(after)
     db = DB(DB_FILE)
+    subs = []
     await db.connect()
-    data = await db.get_top_subs(epoch)
+    data = await db.get_subs(epoch, limit)
+    async for row in data:
+        sub = Sub()
+        sub.name = row[0]
+        votes = Votes()
+        votes.good = row[1]
+        votes.bad = row[2]
+        sub.votes = votes
+        subs.append(sub)
     await db.close()
-    return _create_top_chart_dataset(data)
+    return subs
 
 
 @cached(ttl=TTL, serializer=PickleSerializer())
-async def get_top_bots(after='1y'):
-    epoch = get_epoch(after)
-    db = DB(DB_FILE)
-    await db.connect()
-    data = await db.get_top_bots(epoch)
-    await db.close()
-    return _create_top_chart_dataset(data)
-
-
-@cached(ttl=TTL, serializer=PickleSerializer())
-async def get_pie(after='1y'):
-    epoch = get_epoch(after)
-    db = DB(DB_FILE)
-    await db.connect()
-    total_gb = await db.get_vote_count(epoch, 'G')
-    total_bb = await db.get_vote_count(epoch, 'B')
-    await db.close()
-    return {
-        'labels': ['Good Bot Votes', 'Bad Bot Votes'],
-        'datasets':
-            [
-                {
-                    'data': [total_gb, total_bb],
-                    'backgroundColor': ['rgba(0, 255, 0, 1)', 'rgba(255, 0, 0, 1)']
-                }
-            ]
-    }
-
-
-@cached(ttl=TTL, serializer=PickleSerializer())
-async def get_votes(after='1y'):
+async def get_graph(after='1y'):
     epoch = get_epoch(after)
     db = DB(DB_FILE)
     await db.connect()
 
-    votes = {
-        'labels': [],
-        'datasets':
-            [
-                {
-                    'label': 'Bad Bot Votes',
-                    'data': [],
-                    'fill': True,
-                    'tension': 0.4,
-                    'backgroundColor': 'rgba(255, 0, 0, 1)'
-                },
-                {
-                    'label': 'Good Bot Votes',
-                    'data': [],
-                    'fill': True,
-                    'tension': 0.4,
-                    'backgroundColor': 'rgba(0, 0, 255, 1)'
-                },
-                {
-                    'label': 'Total Votes',
-                    'data': [],
-                    'fill': True,
-                    'tension': 0.4,
-                    'backgroundColor': 'rgba(128, 0, 128, 1)'
-                }
-
-            ]
-    }
     results = {}
     if 'd' in after:
         for i in range(24):
@@ -210,13 +138,17 @@ async def get_votes(after='1y'):
             key, good_votes, bad_votes = row
             results[months_of_year[int(key) - 1]] = {'good_votes': good_votes, 'bad_votes': bad_votes}
 
+    graph = Graph()
+    graph.labels = []
+    graph.votes = []
     for key in results:
         good_votes = results[key]['good_votes']
         bad_votes = results[key]['bad_votes']
-        votes['labels'].append(key)
-        votes['datasets'][2]['data'].append(good_votes + bad_votes)
-        votes['datasets'][1]['data'].append(good_votes)
-        votes['datasets'][0]['data'].append(bad_votes)
+        graph.labels.append(key)
+        votes = Votes()
+        votes.good = good_votes
+        votes.bad = bad_votes
+        graph.votes.append(votes)
 
     await db.close()
-    return votes
+    return graph

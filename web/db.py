@@ -73,28 +73,18 @@ class DB:
                         {}'''.format(now, now, sort, limit_str), [epoch, minvotes])
         return c
 
-    async def get_top_subs(self, epoch, limit=5):
+    async def get_subs(self, epoch, limit=None):
         """Get top subreddits from db."""
-        c = await self.conn.execute('''select subreddit, count(*) from votes
+        limit_str = 'LIMIT {}'.format(int(limit)) if limit else ''
+        c = await self.conn.execute('''select subreddit,
+                            sum(CASE WHEN vote = 'G' THEN 1 ELSE 0 END) as good_votes,
+                            sum(CASE WHEN vote = 'B' THEN 1 ELSE 0 END) as bad_votes
+                        from votes
                         where subreddit IS NOT NULL AND subreddit != '' AND timestamp >= ?
                         group by subreddit
                         order by count(*) desc
-                        limit ?''', [epoch, limit])
-        return await c.fetchall()
-
-    async def get_top_bots(self, epoch, limit=5):
-        """Get top bots from db."""
-        c = await self.conn.execute('''select bot, round((good_votes + 1) / (bad_votes + 1), 2)
-                from (select bot,
-                        sum(CASE WHEN vote = 'G' THEN 1 ELSE 0 END) as good_votes,
-                        sum(CASE WHEN vote = 'B' THEN 1 ELSE 0 END) as bad_votes
-                    from votes
-                    where timestamp >= ?
-                    group by bot) v
-                group by bot
-                order by round((good_votes + 1) / (bad_votes + 1), 2) DESC
-                limit ?''', [epoch, limit])
-        return await c.fetchall()
+                        {}'''.format(limit_str), [epoch])
+        return c
 
     async def get_vote_count(self, epoch, vote_type):
         """Get count of specific vote type."""
