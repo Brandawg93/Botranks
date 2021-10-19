@@ -5,6 +5,22 @@
 
         <!-- Global site tag (gtag.js) - Google Analytics -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=UA-160195151-1"></script>
+        <script
+          src="https://browser.sentry-cdn.com/6.13.3/bundle.tracing.min.js"
+          integrity="sha384-bMCNwkS0NNIDdeiv/LpGYQjDzjnZSqqN12IWUUyPlSTLXQloo4EAl9P9mW9AyVzw"
+          crossorigin="anonymous"
+        ></script>
+        <script type="application/javascript">
+            Sentry.init({
+              dsn: "https://9f9640a623844f20bdd1c9c00a5ed599@o1044850.ingest.sentry.io/6020070",
+              integrations: [new Sentry.Integrations.BrowserTracing()],
+
+              // Set tracesSampleRate to 1.0 to capture 100%
+              // of transactions for performance monitoring.
+              // We recommend adjusting this value in production
+              tracesSampleRate: 1.0,
+            });
+        </script>
         <script>
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
