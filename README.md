@@ -1,5 +1,5 @@
 # BotRanks
-[![BuyMeACoffee](https://img.shields.io/badge/coffee-donate-orange?logo=buy-me-a-coffee&logoColor=yellow)](https://www.buymeacoffee.com/L1FgZTD)
+[![PayPal](https://img.shields.io/badge/paypal-donate-blue?logo=paypal)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=CEYYGVB7ZZ764&item_name=Botranks&currency_code=USD&source=url)
 
 BotRanks is a website that shows the ranks of bots on Reddit.
 
@@ -41,6 +41,6 @@ BotRanks uses [GraphQL](https://graphql.org/) for its API. Feel free to look aro
 
 **A:** BotRanks uses time to mitigate vote manipulation. The site can be filtered between day/week/month/year allowing viewers to see which bots have had a recent rise in the rankings and which have been consistently ranked in the top. All votes stop being counted exactly one year from when they were cast to allow new bots a chance to climb the ranks.
 # Support BotRanks
-This website was made to keep Redditors informed on bots both good and bad. If you wish to show support for its continued development, consider [buying me a coffee](https://www.buymeacoffee.com/L1FgZTD).
+This website was made to keep Redditors informed on bots both good and bad. If you wish to show support for its continued development, consider [sponsoring me on Github](https://github.com/sponsors/Brandawg93).
 
 **Note:** The site is currently in development and more will come soon! Feel free to look around and submit issues or feedback on the [Github](https://github.com/Brandawg93/Botranks).
