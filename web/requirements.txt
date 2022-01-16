@@ -5,3 +5,4 @@ aiofiles
 aiosqlite
 aiocache
 graphene
+starlette-graphene3

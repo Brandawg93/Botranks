@@ -1,11 +1,10 @@
-from graphql.execution.executors.asyncio import AsyncioExecutor
 from graphql import GraphQLError
 from graphene import Schema
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import FileResponse
-from starlette.graphql import GraphQLApp
+from starlette_graphene3 import GraphQLApp, make_graphiql_handler
 from graphene import ObjectType, Int, List, String, Field
 from models import Bot, Stats, Sub, VoteType, Graph
 from utils import get_ranks, get_stats, get_graph, get_subs
@@ -43,15 +42,15 @@ class Query(ObjectType):
         return await get_stats(after, vote_type)
 
     async def resolve_subs(self, info, after, limit=None):
-        return get_subs(after, limit)
+        return await get_subs(after, limit)
 
     async def resolve_graph(self, info, after):
-        return get_graph(after)
+        return await get_graph(after)
 
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
-app.add_route("/graphql", GraphQLApp(schema=Schema(query=Query), executor_class=AsyncioExecutor))
+app.add_route("/graphql", GraphQLApp(schema=Schema(query=Query), on_get=make_graphiql_handler()))
 templates = Jinja2Templates(directory="templates")
 
 

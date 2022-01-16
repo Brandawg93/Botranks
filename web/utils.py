@@ -61,7 +61,10 @@ async def get_ranks(after='1y', sort='top', limit=None):
 
 
 @cached(ttl=TTL, serializer=PickleSerializer())
-async def get_stats(after='1y', vote_type=None):
+async def get_stats(after='1y', vote=None):
+    vote_type = None
+    if vote:
+        vote_type = vote.value
     stats = Stats()
     epoch = get_epoch(after)
     db = DB(DB_FILE)
