@@ -111,13 +111,16 @@ class DB:
         try:
             bot = r.redditor(name)
             try:
-                if self.debug:
-                    print('Updating bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
-                                                                                         bot.link_karma))
                 # Insert a row of data
+                if self.debug:
+                    print('Adding bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
+                                                                                       bot.link_karma))
                 data = [str(bot.name), bot.comment_karma, bot.link_karma]
                 c.execute("INSERT INTO bots VALUES (?, ?, ?)", data)
             except sqlite3.IntegrityError:
+                if self.debug:
+                    print('Updating bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
+                                                                                         bot.link_karma))
                 data = [bot.comment_karma, bot.link_karma, str(bot.name)]
                 c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
 
@@ -162,8 +165,8 @@ class DB:
                         updates += 1
                         if self.debug:
                             print('Adding vote with id={}, bot={}, vote={}.'.format(vote.id,
-                                                                                       parent.author.name,
-                                                                                       vote_type.name[0]))
+                                                                                    parent.author.name,
+                                                                                    vote_type.name[0]))
 
                         self.conn.commit()
                     except sqlite3.IntegrityError:
