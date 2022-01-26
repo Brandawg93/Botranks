@@ -112,17 +112,17 @@ class DB:
             bot = r.redditor(name)
             try:
                 # Insert a row of data
+                data = [str(bot.name), bot.comment_karma, bot.link_karma]
+                c.execute("INSERT INTO bots VALUES (?, ?, ?)", data)
                 if self.debug:
                     print('Adding bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
                                                                                        bot.link_karma))
-                data = [str(bot.name), bot.comment_karma, bot.link_karma]
-                c.execute("INSERT INTO bots VALUES (?, ?, ?)", data)
             except sqlite3.IntegrityError:
+                data = [bot.comment_karma, bot.link_karma, str(bot.name)]
+                c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
                 if self.debug:
                     print('Updating bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
                                                                                          bot.link_karma))
-                data = [bot.comment_karma, bot.link_karma, str(bot.name)]
-                c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
 
         except ResponseException as e:
             print('Received {} for {}. Skipping...'.format(e.response.status_code, name))
