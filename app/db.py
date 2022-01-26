@@ -161,7 +161,7 @@ class DB:
                                    ])
                         updates += 1
                         if self.debug:
-                            print('Adding vote {} with id={}, bot={}, vote={}.'.format(updates, vote.id,
+                            print('Adding vote with id={}, bot={}, vote={}.'.format(vote.id,
                                                                                        parent.author.name,
                                                                                        vote_type.name[0]))
 
