@@ -30,34 +30,37 @@ def get_votes(timestamp):
 
 @timer.job(interval=timedelta(minutes=UPDATE_INTERVAL))
 def update_db():
-    backfill = '--backfill' in sys.argv
-    vacuum = '--vacuum' in sys.argv
-    db = DB(DB_FILE, vacuum=vacuum, debug=backfill)
-    db.create_tables()
+    try:
+        backfill = '--backfill' in sys.argv
+        vacuum = '--vacuum' in sys.argv
+        db = DB(DB_FILE, vacuum=vacuum, debug=backfill)
+        db.create_tables()
 
-    if backfill:
-        print('Backfilling db...')
-        last_update = int(time.time()) - YEAR_IN_SECONDS
-    else:
-        print('Updating db...')
-        last_update = db.get_last_updated_timestamp()
+        if backfill:
+            print('Backfilling db...')
+            last_update = int(time.time()) - YEAR_IN_SECONDS
+        else:
+            print('Updating db...')
+            last_update = db.get_last_updated_timestamp()
 
-    db.close()
-    votes = get_votes(last_update)
-    num_of_updates = 0
-    for vote in votes:
-        db = DB(DB_FILE, debug=backfill)
-        num_of_updates += db.add_votes([vote])
         db.close()
+        votes = get_votes(last_update)
+        num_of_updates = 0
+        for vote in votes:
+            db = DB(DB_FILE, debug=backfill)
+            num_of_updates += db.add_votes([vote])
+            db.close()
 
-    now = datetime.now()
-    print('db updated at {} with {} updates.'.format(now.strftime('%Y-%m-%d %H:%M:%S'), num_of_updates))
+        now = datetime.now()
+        print('db updated at {} with {} updates.'.format(now.strftime('%Y-%m-%d %H:%M:%S'), num_of_updates))
+    except KeyboardInterrupt:
+        print('\nExiting...')
+        sys.exit(0)
+    except Exception as e:
+        print(e)
 
 
 if __name__ == "__main__":
-    try:
-        update_db()
-    except KeyboardInterrupt:
-        print('Exiting...')
+    update_db()
     if '--backfill' not in sys.argv:
         timer.start(block=True)
