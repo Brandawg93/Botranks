@@ -44,3 +44,15 @@ BotRanks uses [GraphQL](https://graphql.org/) for its API. Feel free to look aro
 This website was made to keep Redditors informed on bots both good and bad. If you wish to show support for its continued development, consider [sponsoring me on Github](https://github.com/sponsors/Brandawg93).
 
 **Note:** The site is currently in development and more will come soon! Feel free to look around and submit issues or feedback on the [Github](https://github.com/Brandawg93/Botranks).
+
+# API Endpoints
+
+## JSON
+
+- ``/api/getrank/{username}`` : gets a users ranking, karma, score, and vote counts
+
+- ``/api/getbadge/{username}`` : gets a users rank, and not much more, likey intended for use in a badge.
+
+- ``/api/ping`` : returns pong
+
+- /api/getbadge/
