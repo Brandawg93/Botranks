@@ -39,38 +39,40 @@ class DB:
         else:
             return None
 
-    async def get_ranks(self, epoch, sort, limit=None, minvotes=MINVOTES):
+    async def get_ranks(self, epoch, sort, limit=None, user='%', minvotes=MINVOTES):
         """Get ranks from db."""
         if sort not in ['top', 'hot', 'controversial']:
             sort = 'top'
+        if not user:
+            user = '%'
         limit_str = 'LIMIT {}'.format(int(limit)) if limit else ''
         now = int((datetime.now()).strftime('%s'))
         c = await self.conn.execute('''select v.bot,
-                    b.link_karma,
-                    b.comment_karma,
-                    v.good_votes,
-                    v.bad_votes,
-                    ROUND(((v.good_votes + 1.9208) / (v.good_votes + v.bad_votes) - 1.96 * power(
-                    (v.good_votes * v.bad_votes) / (v.good_votes + v.bad_votes) + 0.9604, 0.5) /
-                    (v.good_votes + v.bad_votes)) / (
-                    1 + 3.8416 / (v.good_votes + v.bad_votes)), 4) as top,
-                    ((v.good_time + 1.9208) / (v.good_time + v.bad_time) - 1.96 * power(
-                    (v.good_time * v.bad_time) / (v.good_time + v.bad_time) + 0.9604, 0.5) /
-                    (v.good_time + v.bad_time)) / (
-                    1 + 3.8416 / (v.good_time + v.bad_time)) as hot,
-                    (v.good_votes + v.bad_votes) / (abs(v.good_votes - v.bad_votes) + 1) as controversial
-                        from (select bot,
-                                count(CASE WHEN vote = 'G' THEN 1 END) as good_votes,
-                                count(CASE WHEN vote = 'B' THEN 1 END) as bad_votes,
-                                sum(CASE WHEN vote = 'G' THEN hot_weight({}, timestamp) ELSE 0 END) as good_time,
-                                sum(CASE WHEN vote = 'B' THEN hot_weight({}, timestamp) ELSE 0 END) as bad_time
-                            from votes
-                            where timestamp >= ?
-                            group by bot) v
-                        inner join bots b on v.bot = b.bot
-                        where v.good_votes + v.bad_votes >= ?
-                        order by {} desc, v.good_votes desc, v.bad_votes
-                        {}'''.format(now, now, sort, limit_str), [epoch, minvotes])
+                b.link_karma,
+                b.comment_karma,
+                v.good_votes,
+                v.bad_votes,
+                ROUND(((v.good_votes + 1.9208) / (v.good_votes + v.bad_votes) - 1.96 * power(
+                (v.good_votes * v.bad_votes) / (v.good_votes + v.bad_votes) + 0.9604, 0.5) /
+                (v.good_votes + v.bad_votes)) / (
+                1 + 3.8416 / (v.good_votes + v.bad_votes)), 4) as top,
+                ((v.good_time + 1.9208) / (v.good_time + v.bad_time) - 1.96 * power(
+                (v.good_time * v.bad_time) / (v.good_time + v.bad_time) + 0.9604, 0.5) /
+                (v.good_time + v.bad_time)) / (
+                1 + 3.8416 / (v.good_time + v.bad_time)) as hot,
+                (v.good_votes + v.bad_votes) / (abs(v.good_votes - v.bad_votes) + 1) as controversial
+                    from (select bot,
+                            count(CASE WHEN vote = 'G' THEN 1 END) as good_votes,
+                            count(CASE WHEN vote = 'B' THEN 1 END) as bad_votes,
+                            sum(CASE WHEN vote = 'G' THEN hot_weight({}, timestamp) ELSE 0 END) as good_time,
+                            sum(CASE WHEN vote = 'B' THEN hot_weight({}, timestamp) ELSE 0 END) as bad_time
+                        from votes
+                        where timestamp >= ? and bot like ?
+                        group by bot) v
+                    inner join bots b on v.bot = b.bot
+                    where v.good_votes + v.bad_votes >= ?
+                    order by {} desc, v.good_votes desc, v.bad_votes
+                    {}'''.format(now, now, sort, limit_str), [epoch, user, minvotes])
         return c
 
     async def get_subs(self, epoch, limit=None):
