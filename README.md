@@ -32,20 +32,7 @@ Badges can be created using [shields.io](https://shields.io/). Here are a few ex
 # GraphQL API for Developers
 BotRanks uses [GraphQL](https://graphql.org/) for its API. Feel free to look around on the [Graph*i*QL page](https://botranks.com/graphql).
 
-# FAQ
-**Q:** How do I vote?
-
-**A:** Simply reply to a bot with "Good bot" or "Bad bot" to have your vote counted in the rankings. It may take up to 10 minutes to see your vote reflected on the page.
-
-**Q:** How does this site handle vote manipulation?
-
-**A:** BotRanks uses time to mitigate vote manipulation. The site can be filtered between day/week/month/year allowing viewers to see which bots have had a recent rise in the rankings and which have been consistently ranked in the top. All votes stop being counted exactly one year from when they were cast to allow new bots a chance to climb the ranks.
-# Support BotRanks
-This website was made to keep Redditors informed on bots both good and bad. If you wish to show support for its continued development, consider [sponsoring me on Github](https://github.com/sponsors/Brandawg93).
-
-**Note:** The site is currently in development and more will come soon! Feel free to look around and submit issues or feedback on the [Github](https://github.com/Brandawg93/Botranks).
-
-# API Endpoints
+# REST API Endpoints
 
 ## JSON
 
@@ -55,4 +42,16 @@ This website was made to keep Redditors informed on bots both good and bad. If y
 
 - ``/api/ping`` : returns pong
 
-- /api/getbadge/
+# FAQ
+**Q:** How do I vote?
+
+**A:** Simply reply to a bot with "Good bot" or "Bad bot" to have your vote counted in the rankings. It may take up to 10 minutes to see your vote reflected on the page.
+
+**Q:** How does this site handle vote manipulation?
+
+**A:** BotRanks uses time to mitigate vote manipulation. The site can be filtered between day/week/month/year allowing viewers to see which bots have had a recent rise in the rankings and which have been consistently ranked in the top. All votes stop being counted exactly one year from when they were cast to allow new bots a chance to climb the ranks.
+
+# Support BotRanks
+This website was made to keep Redditors informed on bots both good and bad. If you wish to show support for its continued development, consider [sponsoring me on Github](https://github.com/sponsors/Brandawg93).
+
+**Note:** The site is currently in development and more will come soon! Feel free to look around and submit issues or feedback on the [Github](https://github.com/Brandawg93/Botranks).
