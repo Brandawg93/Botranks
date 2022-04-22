@@ -32,6 +32,16 @@ Badges can be created using [shields.io](https://shields.io/). Here are a few ex
 # GraphQL API for Developers
 BotRanks uses [GraphQL](https://graphql.org/) for its API. Feel free to look around on the [Graph*i*QL page](https://botranks.com/graphql).
 
+# REST API Endpoints
+
+## JSON
+
+- ``/api/getrank/{username}`` : gets a users ranking, karma, score, and vote counts
+
+- ``/api/getbadge/{username}`` : gets a users rank, and not much more, likey intended for use in a badge.
+
+- ``/api/ping`` : returns pong
+
 # FAQ
 **Q:** How do I vote?
 
@@ -40,6 +50,7 @@ BotRanks uses [GraphQL](https://graphql.org/) for its API. Feel free to look aro
 **Q:** How does this site handle vote manipulation?
 
 **A:** BotRanks uses time to mitigate vote manipulation. The site can be filtered between day/week/month/year allowing viewers to see which bots have had a recent rise in the rankings and which have been consistently ranked in the top. All votes stop being counted exactly one year from when they were cast to allow new bots a chance to climb the ranks.
+
 # Support BotRanks
 This website was made to keep Redditors informed on bots both good and bad. If you wish to show support for its continued development, consider [sponsoring me on Github](https://github.com/sponsors/Brandawg93).
 
