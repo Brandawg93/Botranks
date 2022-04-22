@@ -39,12 +39,10 @@ class DB:
         else:
             return None
 
-    async def get_ranks(self, epoch, sort, limit=None, user='%', minvotes=MINVOTES):
+    async def get_ranks(self, epoch, sort, limit=None, minvotes=MINVOTES):
         """Get ranks from db."""
         if sort not in ['top', 'hot', 'controversial']:
             sort = 'top'
-        if not user:
-            user = '%'
         limit_str = 'LIMIT {}'.format(int(limit)) if limit else ''
         now = int((datetime.now()).strftime('%s'))
         c = await self.conn.execute('''select v.bot,
@@ -67,12 +65,12 @@ class DB:
                             sum(CASE WHEN vote = 'G' THEN hot_weight({}, timestamp) ELSE 0 END) as good_time,
                             sum(CASE WHEN vote = 'B' THEN hot_weight({}, timestamp) ELSE 0 END) as bad_time
                         from votes
-                        where timestamp >= ? and bot like ?
+                        where timestamp >= ?
                         group by bot) v
                     inner join bots b on v.bot = b.bot
                     where v.good_votes + v.bad_votes >= ?
                     order by {} desc, v.good_votes desc, v.bad_votes
-                    {}'''.format(now, now, sort, limit_str), [epoch, user, minvotes])
+                    {}'''.format(now, now, sort, limit_str), [epoch, minvotes])
         return c
 
     async def get_subs(self, epoch, limit=None):

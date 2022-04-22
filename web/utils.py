@@ -29,14 +29,14 @@ def get_epoch(after):
 
 
 @cached(ttl=TTL, serializer=PickleSerializer())
-async def get_ranks(after='1y', sort='top', limit=None, user=None):
+async def get_ranks(after='1y', sort='top', limit=None):
     if sort == 'hot':
         after = '1y'
     epoch = get_epoch(after)
     ranks = []
     db = DB(DB_FILE)
     await db.connect()
-    data = await db.get_ranks(epoch, sort, limit=limit, user=user)
+    data = await db.get_ranks(epoch, sort, limit=limit)
     num = 1
 
     async for row in data:
