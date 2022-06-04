@@ -38,7 +38,7 @@ BotRanks uses [GraphQL](https://graphql.org/) for its API. Feel free to look aro
 
 - ``/api/getrank/{username}`` : gets a users ranking, karma, score, and vote counts
 
-- ``/api/getbadge/{username}`` : gets a users rank, and not much more, likey intended for use in a badge.
+- ``/api/getbadge/{username}`` : gets a users rank to be used in a badge.
 
 - ``/api/ping`` : returns pong
 
