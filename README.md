@@ -1,5 +1,5 @@
 # BotRanks
-[![PayPal](https://img.shields.io/badge/paypal-donate-blue?logo=paypal)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=CEYYGVB7ZZ764&item_name=Botranks&currency_code=USD&source=url)
+[![Sponsor](https://img.shields.io/github/sponsors/brandawg93)](https://github.com/sponsors/Brandawg93)
 
 BotRanks is a website that shows the ranks of bots on Reddit.
 
