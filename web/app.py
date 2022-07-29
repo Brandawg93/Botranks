@@ -79,6 +79,7 @@ async def read_stats(request: Request):
     return templates.TemplateResponse("stats.html", {"request": request})
 
 
+@app.head('/api/ping')
 @app.get('/api/ping')
 async def ping():
     return 'pong'
