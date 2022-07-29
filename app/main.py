@@ -24,7 +24,7 @@ def fxn(item):
 def search_pushshift(q, timestamp=None):
     """Search pushshift for specific criteria."""
     if not timestamp:
-        timestamp = '1h'
+        timestamp = int(time()) - YEAR_IN_SECONDS
     fields = ['author', 'body', 'created_utc', 'id', 'link_id', 'parent_id', 'subreddit']
     return api.search_comments(q=q, after=timestamp, filter=fields, mem_safe=True, filter_fn=fxn)
 
