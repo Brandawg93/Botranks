@@ -43,13 +43,8 @@ def update_db():
             print('Updating db...')
             last_update = db.get_last_updated_timestamp()
 
-        db.close()
         votes = get_votes(last_update)
-        num_of_updates = 0
-        for vote in votes:
-            db = DB(DB_FILE, debug=backfill)
-            num_of_updates += db.add_votes([vote])
-            db.close()
+        num_of_updates = db.add_votes(votes)
 
         now = datetime.now()
         print('db updated at {} with {} updates.'.format(now.strftime('%Y-%m-%d %H:%M:%S'), num_of_updates))

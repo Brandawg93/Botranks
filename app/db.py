@@ -33,10 +33,14 @@ def get_vote_type(body):
 
 class DB:
     def __init__(self, file, vacuum=False, debug=False):
-        self.conn = sqlite3.connect(file)
+        self.file = file
+        self.conn = None
         self.debug = debug
         if vacuum:
+            self._open()
             self._vacuum()
+            self._close()
+
 
     def _vacuum(self):
         c = self.conn.cursor()
@@ -84,58 +88,50 @@ class DB:
 
     def create_tables(self):
         """Create necessary tables if they do not exist."""
+        self._open()
         if not self._check_if_exists('votes'):
             self._create_votes_table()
         if not self._check_if_exists('bots'):
             self._create_bots_table()
+        self._close()
 
     def get_last_updated_timestamp(self):
+        self._open()
         c = self.conn.cursor()
         c.execute("SELECT timestamp from votes order by id DESC LIMIT 1")
         query = c.fetchone()
+        self._close()
         if query and len(query) > 0:
             return query[0]
         else:
             return None
 
-    def add_bot(self, name):
+    def add_bot(self, bot):
         """Add bots to db."""
+        self._open()
         c = self.conn.cursor()
-        r = praw.Reddit(
-            client_id=REDDIT_CLIENT_ID,
-            client_secret=REDDIT_CLIENT_SECRET,
-            password=REDDIT_PASSWORD,
-            user_agent='mobile:botranker:0.1 (by /u/brandawg93)',
-            username=REDDIT_USERNAME)
-
         try:
-            bot = r.redditor(name)
-            try:
-                # Insert a row of data
-                data = [str(bot.name), bot.comment_karma, bot.link_karma]
-                c.execute("INSERT INTO bots VALUES (?, ?, ?)", data)
-                if self.debug:
-                    print('Adding bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
-                                                                                       bot.link_karma))
-            except sqlite3.IntegrityError:
-                data = [bot.comment_karma, bot.link_karma, str(bot.name)]
-                c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
-                if self.debug:
-                    print('Updating bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
-                                                                                         bot.link_karma))
+            # Insert a row of data
+            data = [str(bot.name), bot.comment_karma, bot.link_karma]
+            c.execute("INSERT INTO bots VALUES (?, ?, ?)", data)
+            if self.debug:
+                print('Adding bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
+                                                                                    bot.link_karma))
+        except sqlite3.IntegrityError:
+            data = [bot.comment_karma, bot.link_karma, str(bot.name)]
+            c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
+            if self.debug:
+                print('Updating bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
+                                                                                        bot.link_karma))
 
-        except ResponseException as e:
-            print('Received {} for {}. Skipping...'.format(e.response.status_code, name))
-        except AttributeError:
-            pass
         except Exception as e:
             print(e)
+        
+        self._close()
 
     def add_votes(self, votes):
         """Add votes to db."""
-        c = self.conn.cursor()
         updates = 0
-        bots = []
         r = praw.Reddit(
             client_id=REDDIT_CLIENT_ID,
             client_secret=REDDIT_CLIENT_SECRET,
@@ -143,14 +139,17 @@ class DB:
             user_agent='mobile:botranker:0.1 (by /u/brandawg93)',
             username=REDDIT_USERNAME)
 
-        for vote in filter(self._filter_valid, votes):
+        self._open()
+        votes_lst = list(filter(self._filter_valid, votes))
+        self._close()
+        parents = list(r.info([vote.parent_id for vote in votes_lst]))
+        bots = list([parent.author for parent in parents if parent.author])
+        self._open()
+        c = self.conn.cursor()
+        for vote in votes_lst:
             try:
-                parent = next(r.info(fullnames=[vote.parent_id]), None)
-                if parent and parent.author:
-                    # Only update bots once per method call
-                    if parent.author not in bots:
-                        bots.append(parent.author)
-                        self.add_bot(parent.author)
+                parent = next(iter([p for p in parents if p.name == vote.parent_id]), None)
+                if parent.author:
                     try:
                         vote_type = get_vote_type(vote.body)
                         # Insert a row of data
@@ -168,17 +167,30 @@ class DB:
                                                                                     parent.author.name,
                                                                                     vote_type.name[0]))
 
-                        self.conn.commit()
                     except sqlite3.IntegrityError:
                         pass
             except ResponseException as e:
                 print('Received {} for {}. Skipping...'.format(e.response.status_code, vote.parent_id))
             except Exception as e:
                 print(e)
+        self._close()
 
+        seen_bots = set()
+        unique_bots = []
+        for bot in bots:
+            if bot.name not in seen_bots:
+                unique_bots.append(bot)
+                seen_bots.add(bot.name)
+
+        for bot in unique_bots:
+            self.add_bot(bot)
         return updates
 
-    def close(self):
+    def _open(self):
+        # open the connection
+        self.conn = sqlite3.connect(self.file)
+
+    def _close(self):
         # commit the changes to db
         self.conn.commit()
 
