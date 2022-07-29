@@ -87,22 +87,20 @@ async def ping():
 
 @app.get('/api/getrank/{bot}')
 async def get_bot_rank(bot: str):
-    ranks = await get_ranks('1y')
-    rank = next((x for x in ranks if x.name == bot), None)
-    if not rank:
+    ranks = await get_ranks('1y', bot=bot)
+    if len(ranks) < 1:
         raise HTTPException(status_code=404, detail="Bot not found")
-    return rank
+    return ranks[0]
 
 
 @app.get('/api/getbadge/{bot}')
 async def get_bot_rank(bot: str):
-    ranks = await get_ranks('1y')
-    rank = next((x for x in ranks if x.name == bot), None)
-    if not rank:
+    ranks = await get_ranks('1y', bot=bot)
+    if len(ranks) < 1:
         raise HTTPException(status_code=404, detail="Bot not found")
     return {
         'schemaVersion': 1,
-        'label': rank.name,
-        'message': str(rank.rank),
+        'label': ranks[0].name,
+        'message': str(ranks[0].rank),
         'color': 'orange'
     }
