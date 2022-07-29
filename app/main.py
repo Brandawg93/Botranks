@@ -2,6 +2,7 @@ from pmaw import PushshiftAPI
 from db import DB
 from datetime import datetime
 from time import sleep, time
+import re
 import sys
 
 api = PushshiftAPI()
@@ -10,17 +11,26 @@ UPDATE_INTERVAL = 10
 YEAR_IN_SECONDS = 31556926
 DB_FILE = '../votes.db'
 
+def fxn(item):
+        regex = re.compile(r'^(good|bad) bot.*', re.I)
+        text = re.search(regex, item['body'])
+        db = DB(DB_FILE)
+        db._open()
+        valid = db._filter_valid(item)
+        db._close()
+        return text is not None and valid
+
 
 def search_pushshift(q, timestamp=None):
     """Search pushshift for specific criteria."""
     if not timestamp:
         timestamp = '1h'
     fields = ['author', 'body', 'created_utc', 'id', 'link_id', 'parent_id', 'subreddit']
-    return api.search_comments(q=q, after=timestamp, filter=fields)
+    return api.search_comments(q=q, after=timestamp, filter=fields, mem_safe=True, filter_fn=fxn)
 
 
 def get_votes(timestamp):
-    """Get last hour worth of votes."""
+    """Get last timestamp worth of votes."""
     query = '"good bot"|"bad bot"'
     return search_pushshift(query, timestamp)
 

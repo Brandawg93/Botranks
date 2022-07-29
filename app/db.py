@@ -139,9 +139,7 @@ class DB:
             user_agent='mobile:botranker:0.1 (by /u/brandawg93)',
             username=REDDIT_USERNAME)
 
-        self._open()
-        votes_lst = list(filter(self._filter_valid, votes))
-        self._close()
+        votes_lst = list(votes)
         parents = list(r.info([vote['parent_id'] for vote in votes_lst]))
         bots = list([parent.author for parent in parents if parent.author])
         self._open()
