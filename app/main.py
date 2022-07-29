@@ -1,12 +1,9 @@
 from pmaw import PushshiftAPI
 from db import DB
 from datetime import datetime
-from timeloop import Timeloop
-from datetime import timedelta
+from time import sleep
 import sys
-import time
 
-timer = Timeloop()
 api = PushshiftAPI()
 
 UPDATE_INTERVAL = 10
@@ -28,7 +25,6 @@ def get_votes(timestamp):
     return search_pushshift(query, timestamp)
 
 
-@timer.job(interval=timedelta(minutes=UPDATE_INTERVAL))
 def update_db():
     try:
         backfill = '--backfill' in sys.argv
@@ -58,4 +54,6 @@ def update_db():
 if __name__ == "__main__":
     update_db()
     if '--backfill' not in sys.argv:
-        timer.start(block=True)
+        while True:
+            sleep(60 * UPDATE_INTERVAL)
+            update_db()
