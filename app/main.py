@@ -1,4 +1,4 @@
-from psaw import PushshiftAPI
+from pmaw import PushshiftAPI
 from db import DB
 from datetime import datetime
 from timeloop import Timeloop

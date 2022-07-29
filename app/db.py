@@ -79,11 +79,11 @@ class DB:
 
     def _filter_valid(self, vote):
         """Filter existing votes."""
-        vote_type = get_vote_type(vote.body)
+        vote_type = get_vote_type(vote['body'])
         if vote_type == VoteType.NONE:
             return False
         c = self.conn.cursor()
-        c.execute("SELECT count(id) from votes where id = ? LIMIT 1", [vote.id])
+        c.execute("SELECT count(id) from votes where id = ? LIMIT 1", [vote['id']])
         return c.fetchone()[0] == 0
 
     def create_tables(self):
@@ -142,35 +142,35 @@ class DB:
         self._open()
         votes_lst = list(filter(self._filter_valid, votes))
         self._close()
-        parents = list(r.info([vote.parent_id for vote in votes_lst]))
+        parents = list(r.info([vote['parent_id'] for vote in votes_lst]))
         bots = list([parent.author for parent in parents if parent.author])
         self._open()
         c = self.conn.cursor()
         for vote in votes_lst:
             try:
-                parent = next(iter([p for p in parents if p.name == vote.parent_id]), None)
+                parent = next(iter([p for p in parents if p.name == vote['parent_id']]), None)
                 if parent.author:
                     try:
-                        vote_type = get_vote_type(vote.body)
+                        vote_type = get_vote_type(vote['body'])
                         # Insert a row of data
                         c.execute("INSERT INTO votes VALUES (?, ?, ?, ?, ?, ?)",
                                   [parent.author.name,
-                                   vote.id,
-                                   vote.subreddit,
-                                   vote.created_utc,
+                                   vote['id'],
+                                   vote['subreddit'],
+                                   vote['created_utc'],
                                    vote_type.name[0],
-                                   vote.author
+                                   vote['author']
                                    ])
                         updates += 1
                         if self.debug:
-                            print('Adding vote with id={}, bot={}, vote={}.'.format(vote.id,
+                            print('Adding vote with id={}, bot={}, vote={}.'.format(vote['id'],
                                                                                     parent.author.name,
                                                                                     vote_type.name[0]))
 
                     except sqlite3.IntegrityError:
                         pass
             except ResponseException as e:
-                print('Received {} for {}. Skipping...'.format(e.response.status_code, vote.parent_id))
+                print('Received {} for {}. Skipping...'.format(e.response.status_code, vote['parent_id']))
             except Exception as e:
                 print(e)
         self._close()
