@@ -1,7 +1,7 @@
 from pmaw import PushshiftAPI
 from db import DB
 from datetime import datetime
-from time import sleep
+from time import sleep, time
 import sys
 
 api = PushshiftAPI()
@@ -34,7 +34,7 @@ def update_db():
 
         if backfill:
             print('Backfilling db...')
-            last_update = int(time.time()) - YEAR_IN_SECONDS
+            last_update = int(time()) - YEAR_IN_SECONDS
         else:
             print('Updating db...')
             last_update = db.get_last_updated_timestamp()
