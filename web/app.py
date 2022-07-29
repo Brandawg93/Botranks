@@ -29,14 +29,13 @@ class Query(ObjectType):
                   vote_type=VoteType())
 
     async def resolve_bot(self, info, name):
-        all_ranks = await get_ranks('1y')
-        rank = next((x for x in all_ranks if x.name == name), None)
-        if not rank:
+        ranks = await get_ranks('1y', bot=name)
+        if len(ranks) < 1:
             raise GraphQLError("Bot not found")
-        return rank
+        return ranks[0]
 
     async def resolve_bots(self, info, after, sort, limit=None):
-        return await get_ranks(after, sort, limit)
+        return await get_ranks(after, sort, limit=limit)
 
     async def resolve_stats(self, info, after, vote_type=None):
         return await get_stats(after, vote_type)
