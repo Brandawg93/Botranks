@@ -21,11 +21,11 @@ def fxn(item):
         return text is not None and valid
 
 
-def search_pushshift(q, timestamp=None):
+def search_pushshift(q, timestamp):
     """Search pushshift for specific criteria."""
-    if not timestamp:
-        timestamp = int(time()) - YEAR_IN_SECONDS
     fields = ['author', 'body', 'created_utc', 'id', 'link_id', 'parent_id', 'subreddit']
+    if not timestamp:
+        return api.search_comments(q=q, search_window=365, filter=fields, mem_safe=True, filter_fn=fxn)
     return api.search_comments(q=q, after=timestamp, filter=fields, mem_safe=True, filter_fn=fxn)
 
 
@@ -39,12 +39,12 @@ def update_db():
     try:
         backfill = '--backfill' in sys.argv
         vacuum = '--vacuum' in sys.argv
+        last_update = None
         db = DB(DB_FILE, vacuum=vacuum, debug=backfill)
         db.create_tables()
 
         if backfill:
             print('Backfilling db...')
-            last_update = int(time()) - YEAR_IN_SECONDS
         else:
             print('Updating db...')
             last_update = db.get_last_updated_timestamp()
