@@ -114,7 +114,7 @@ class DB:
         else:
             return None
 
-    def add_bot(self, name):
+    def add_bots(self, parents):
         """Add bots to db."""
         self._open()
         c = self.conn.cursor()
@@ -125,25 +125,23 @@ class DB:
             user_agent='mobile:botranker:0.1 (by /u/brandawg93)',
             username=REDDIT_USERNAME)
 
-        try:
-            bot = r.redditor(name)
-            # Insert a row of data
-            data = [str(bot.name), bot.comment_karma, bot.link_karma]
-            c.execute("INSERT INTO bots VALUES (?, ?, ?)", data)
-            if self.debug:
-                print('Adding bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
-                                                                                    bot.link_karma))
-        except ResponseException as e:
-            print('Received {} for {}. Skipping...'.format(e.response.status_code, name))
-        except sqlite3.IntegrityError:
-            data = [bot.comment_karma, bot.link_karma, str(bot.name)]
-            c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
-            if self.debug:
-                print('Updating bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
+        for bot in r.redditors.partial_redditors(ids=[parent['author_fullname'] for parent in parents]):
+            try:
+                # Insert a row of data
+                data = [str(bot.name), bot.comment_karma, bot.link_karma]
+                c.execute("INSERT INTO bots VALUES (?, ?, ?)", data)
+                if self.debug:
+                    print('Adding bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
                                                                                         bot.link_karma))
+            except sqlite3.IntegrityError:
+                data = [bot.comment_karma, bot.link_karma, str(bot.name)]
+                c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
+                if self.debug:
+                    print('Updating bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
+                                                                                            bot.link_karma))
 
-        except Exception as e:
-            print(e)
+            except Exception as e:
+                print(e)
         
         self._close()
 
@@ -153,7 +151,7 @@ class DB:
         votes_lst = filter(lambda vote: vote['parent_id'], votes)
         lst = list(map(generate_parent, [vote for vote in votes_lst]))
         parents = list(api.search_comments(ids=[l['parent_id'] for l in lst]))
-        bots = list([parent['author'] for parent in parents if parent['author']])
+        bots = [parent for parent in parents if parent['author']]
         self._open()
         c = self.conn.cursor()
         for vote in lst:
@@ -164,13 +162,13 @@ class DB:
                         vote_type = get_vote_type(vote['body'])
                         # Insert a row of data
                         c.execute("INSERT INTO votes VALUES (?, ?, ?, ?, ?, ?)",
-                                  [parent['author'],
-                                   vote['id'],
-                                   vote['subreddit'],
-                                   vote['created_utc'],
-                                   vote_type.name[0],
-                                   vote['author']
-                                   ])
+                                    [parent['author'],
+                                    vote['id'],
+                                    vote['subreddit'],
+                                    vote['created_utc'],
+                                    vote_type.name[0],
+                                    vote['author']
+                                    ])
                         updates += 1
                         if self.debug:
                             print('Adding vote with id={}, bot={}, vote={}.'.format(vote['id'],
@@ -186,12 +184,11 @@ class DB:
         seen_bots = set()
         unique_bots = []
         for bot in bots:
-            if bot not in seen_bots:
+            if bot['author'] not in seen_bots:
                 unique_bots.append(bot)
-                seen_bots.add(bot)
+                seen_bots.add(bot['author'])
 
-        for bot in unique_bots:
-            self.add_bot(bot)
+        self.add_bots(unique_bots)
         return updates
 
     def _open(self):
