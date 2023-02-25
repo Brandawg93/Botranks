@@ -159,7 +159,7 @@ class DB:
         for vote in lst:
             try:
                 parent = next((p for p in parents if p['id'] == vote['parent_id']), None)
-                if 'author' in parent:
+                if parent and 'author' in parent:
                     try:
                         vote_type = get_vote_type(vote['body'])
                         # Insert a row of data
