@@ -39,6 +39,10 @@ def generate_parent(vote):
     vote['parent_id'] = base36.dumps(vote['parent_id'])
     return vote
 
+def fxn(item):
+    """Filter parent posts"""
+    return 'author' in item
+
 class DB:
     def __init__(self, file, vacuum=False, debug=False):
         self.file = file
@@ -125,7 +129,7 @@ class DB:
             user_agent='mobile:botranker:0.1 (by /u/brandawg93)',
             username=REDDIT_USERNAME)
 
-        for bot in r.redditors.partial_redditors(ids=[parent['author_fullname'] for parent in parents]):
+        for bot in r.redditors.partial_redditors(ids=parents):
             try:
                 # Insert a row of data
                 data = [str(bot.name), bot.comment_karma, bot.link_karma]
@@ -148,16 +152,14 @@ class DB:
     def add_votes(self, votes):
         """Add votes to db."""
         updates = 0
-        votes_lst = filter(lambda vote: vote['parent_id'], votes)
-        lst = list(map(generate_parent, [vote for vote in votes_lst]))
-        parents = list(api.search_comments(ids=[l['parent_id'] for l in lst]))
-        bots = [parent for parent in parents if parent['author']]
+        votes_lst = list(map(generate_parent, votes))
+        parents = list(api.search_comments(ids=[l['parent_id'] for l in votes_lst], mem_safe=True, filter_fn=fxn))
         self._open()
         c = self.conn.cursor()
-        for vote in lst:
+        for vote in votes_lst:
             try:
                 parent = next((p for p in parents if p['id'] == vote['parent_id']), None)
-                if parent and 'author' in parent:
+                if parent:
                     try:
                         vote_type = get_vote_type(vote['body'])
                         # Insert a row of data
@@ -181,13 +183,7 @@ class DB:
                 print(e)
         self._close()
 
-        seen_bots = set()
-        unique_bots = []
-        for bot in bots:
-            if bot['author'] not in seen_bots:
-                unique_bots.append(bot)
-                seen_bots.add(bot['author'])
-
+        unique_bots = set([parent['author_fullname'] for parent in parents])
         self.add_bots(unique_bots)
         return updates
 

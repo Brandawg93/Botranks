@@ -18,7 +18,7 @@ def fxn(item):
         db._open()
         valid = db._filter_valid(item)
         db._close()
-        return text is not None and valid
+        return text is not None and valid and item['parent_id'] is not None
 
 
 def search_pushshift(q, timestamp):
