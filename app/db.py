@@ -1,10 +1,13 @@
 import re
 import praw
 import sqlite3
-from praw.exceptions import ClientException
-from prawcore.exceptions import NotFound, ResponseException
+import base36
+from pmaw import PushshiftAPI
+from prawcore.exceptions import ResponseException
 from enum import Enum
 from os import environ
+
+api = PushshiftAPI()
 
 REDDIT_CLIENT_ID = environ['REDDIT_CLIENT_ID']
 REDDIT_CLIENT_SECRET = environ['REDDIT_CLIENT_SECRET']
@@ -30,6 +33,11 @@ def get_vote_type(body):
             return VoteType.BAD
     return VoteType.NONE
 
+
+def generate_parent(vote):
+    """Get parent ids in proper format"""
+    vote['parent_id'] = base36.dumps(vote['parent_id'])
+    return vote
 
 class DB:
     def __init__(self, file, vacuum=False, debug=False):
@@ -106,17 +114,27 @@ class DB:
         else:
             return None
 
-    def add_bot(self, bot):
+    def add_bot(self, name):
         """Add bots to db."""
         self._open()
         c = self.conn.cursor()
+        r = praw.Reddit(
+            client_id=REDDIT_CLIENT_ID,
+            client_secret=REDDIT_CLIENT_SECRET,
+            password=REDDIT_PASSWORD,
+            user_agent='mobile:botranker:0.1 (by /u/brandawg93)',
+            username=REDDIT_USERNAME)
+
         try:
+            bot = r.redditor(name)
             # Insert a row of data
             data = [str(bot.name), bot.comment_karma, bot.link_karma]
             c.execute("INSERT INTO bots VALUES (?, ?, ?)", data)
             if self.debug:
                 print('Adding bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
                                                                                     bot.link_karma))
+        except ResponseException as e:
+            print('Received {} for {}. Skipping...'.format(e.response.status_code, name))
         except sqlite3.IntegrityError:
             data = [bot.comment_karma, bot.link_karma, str(bot.name)]
             c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
@@ -132,27 +150,21 @@ class DB:
     def add_votes(self, votes):
         """Add votes to db."""
         updates = 0
-        r = praw.Reddit(
-            client_id=REDDIT_CLIENT_ID,
-            client_secret=REDDIT_CLIENT_SECRET,
-            password=REDDIT_PASSWORD,
-            user_agent='mobile:botranker:0.1 (by /u/brandawg93)',
-            username=REDDIT_USERNAME)
-
-        votes_lst = list(votes)
-        parents = list(r.info([vote['parent_id'] for vote in votes_lst]))
-        bots = list([parent.author for parent in parents if parent.author])
+        votes_lst = filter(lambda vote: vote['parent_id'], votes)
+        lst = list(map(generate_parent, [vote for vote in votes_lst]))
+        parents = list(api.search_comments(ids=[l['parent_id'] for l in lst]))
+        bots = list([parent['author'] for parent in parents if parent['author']])
         self._open()
         c = self.conn.cursor()
-        for vote in votes_lst:
+        for vote in lst:
             try:
-                parent = next(iter([p for p in parents if p.name == vote['parent_id']]), None)
-                if parent.author:
+                parent = next((p for p in parents if p['id'] == vote['parent_id']), None)
+                if 'author' in parent:
                     try:
                         vote_type = get_vote_type(vote['body'])
                         # Insert a row of data
                         c.execute("INSERT INTO votes VALUES (?, ?, ?, ?, ?, ?)",
-                                  [parent.author.name,
+                                  [parent['author'],
                                    vote['id'],
                                    vote['subreddit'],
                                    vote['created_utc'],
@@ -162,13 +174,11 @@ class DB:
                         updates += 1
                         if self.debug:
                             print('Adding vote with id={}, bot={}, vote={}.'.format(vote['id'],
-                                                                                    parent.author.name,
+                                                                                    parent['author'],
                                                                                     vote_type.name[0]))
 
                     except sqlite3.IntegrityError:
                         pass
-            except ResponseException as e:
-                print('Received {} for {}. Skipping...'.format(e.response.status_code, vote['parent_id']))
             except Exception as e:
                 print(e)
         self._close()
@@ -176,9 +186,9 @@ class DB:
         seen_bots = set()
         unique_bots = []
         for bot in bots:
-            if bot.name not in seen_bots:
+            if bot not in seen_bots:
                 unique_bots.append(bot)
-                seen_bots.add(bot.name)
+                seen_bots.add(bot)
 
         for bot in unique_bots:
             self.add_bot(bot)
