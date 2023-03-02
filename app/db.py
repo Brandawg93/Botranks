@@ -183,7 +183,7 @@ class DB:
                 print(e)
         self._close()
 
-        unique_bots = set([parent['author_fullname'] for parent in parents])
+        unique_bots = set([parent['author_fullname'] for parent in parents if 'author_fullname' in parent])
         self.add_bots(unique_bots)
         return updates
 

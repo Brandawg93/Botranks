@@ -26,7 +26,7 @@ def search_pushshift(q, timestamp):
     fields = ['author', 'body', 'created_utc', 'id', 'link_id', 'parent_id', 'subreddit']
     if not timestamp:
         return api.search_comments(q=q, search_window=365, filter=fields, mem_safe=True, filter_fn=fxn)
-    return api.search_comments(q=q, after=timestamp, filter=fields, mem_safe=True, filter_fn=fxn)
+    return api.search_comments(q=q, since=timestamp, filter=fields, mem_safe=True, filter_fn=fxn)
 
 
 def get_votes(timestamp):
