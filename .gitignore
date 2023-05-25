@@ -7,3 +7,5 @@ praw.ini
 *.db
 dev/
 cache/
+node_modules
+dist
