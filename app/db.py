@@ -133,13 +133,13 @@ class DB:
             try:
                 # Insert a row of data
                 data = [str(bot.name), bot.comment_karma, bot.link_karma]
-                c.execute("INSERT INTO bots VALUES (?, ?, ?)", data)
+                # c.execute("INSERT INTO bots VALUES (?, ?, ?)", data)
                 if self.debug:
                     print('Adding bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
                                                                                         bot.link_karma))
             except sqlite3.IntegrityError:
                 data = [bot.comment_karma, bot.link_karma, str(bot.name)]
-                c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
+                # c.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
                 if self.debug:
                     print('Updating bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
                                                                                             bot.link_karma))
@@ -163,14 +163,14 @@ class DB:
                     try:
                         vote_type = get_vote_type(vote['body'])
                         # Insert a row of data
-                        c.execute("INSERT INTO votes VALUES (?, ?, ?, ?, ?, ?)",
-                                    [parent['author'],
-                                    vote['id'],
-                                    vote['subreddit'],
-                                    vote['created_utc'],
-                                    vote_type.name[0],
-                                    vote['author']
-                                    ])
+                        # c.execute("INSERT INTO votes VALUES (?, ?, ?, ?, ?, ?)",
+                        #             [parent['author'],
+                        #             vote['id'],
+                        #             vote['subreddit'],
+                        #             vote['created_utc'],
+                        #             vote_type.name[0],
+                        #             vote['author']
+                        #             ])
                         updates += 1
                         if self.debug:
                             print('Adding vote with id={}, bot={}, vote={}.'.format(vote['id'],

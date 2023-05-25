@@ -1,0 +1,55 @@
+{
+  "name": "botranks",
+  "version": "1.0.0",
+  "description": "UI for botranks website",
+  "main": "dist/server.js",
+  "private": true,
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "tsc && npm run build --prefix client",
+    "format": "prettier --write **/*.tsx",
+    "lint": "eslint **/*.tsx --fix",
+    "start": "node dist/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "concurrently \"tsc --watch\" \"nodemon -q dist/**/*\"",
+    "client": "npm start --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Brandawg93/Botranks.git"
+  },
+  "keywords": [
+    "reddit",
+    "bots"
+  ],
+  "author": "brandawg93",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Brandawg93/Botranks/issues"
+  },
+  "homepage": "https://github.com/Brandawg93/Botranks#readme",
+  "dependencies": {
+    "better-sqlite3": "^8.2.0",
+    "express": "^4.18.2",
+    "express-graphql": "^0.12.0",
+    "graphql": "^15.8.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.3",
+    "@types/cors": "2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/node": "^18.15.8",
+    "@typescript-eslint/eslint-plugin": "^5.56.0",
+    "@typescript-eslint/parser": "^5.56.0",
+    "concurrently": "^7.6.0",
+    "cors": "^2.8.5",
+    "eslint": "^8.36.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-jest": "^27.2.1",
+    "eslint-plugin-prettier": "^4.2.1",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.8.7",
+    "typescript": "^5.0.2"
+  }
+}

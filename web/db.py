@@ -15,14 +15,6 @@ class DB:
         await self.conn.create_function("power", 2, lambda x, y: x ** y)
         await self.conn.create_function("hot_weight", 2, lambda x, y: float(x) / float((x - y)**2))
 
-    async def _check_if_exists(self, table):
-        # get the count of tables with the name
-        c = await self.conn.execute("SELECT count(name) FROM sqlite_master WHERE type='table' AND name=? LIMIT 1",
-                                    [table])
-
-        # if the count is 1, then table exists
-        return (await c.fetchone())[0] == 1
-
     async def get_latest_vote(self, vote_type):
         """Get the last updated time."""
         if vote_type not in ['G', 'B']:

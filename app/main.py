@@ -15,10 +15,10 @@ def fxn(item):
         regex = re.compile(r'^(good|bad) bot.*', re.I)
         text = re.search(regex, item['body'])
         db = DB(DB_FILE)
-        db._open()
-        valid = db._filter_valid(item)
-        db._close()
-        return text is not None and valid and item['parent_id'] is not None
+        # db._open()
+        # valid = db._filter_valid(item)
+        # db._close()
+        return text is not None and item['parent_id'] is not None
 
 
 def search_pushshift(q, timestamp):
@@ -26,7 +26,7 @@ def search_pushshift(q, timestamp):
     fields = ['author', 'body', 'created_utc', 'id', 'link_id', 'parent_id', 'subreddit']
     if not timestamp:
         return api.search_comments(q=q, search_window=365, filter=fields, mem_safe=True, filter_fn=fxn)
-    return api.search_comments(q=q, since=timestamp, filter=fields, mem_safe=True, filter_fn=fxn)
+    return api.search_comments(q=q, since=timestamp, filter=fields, limit=1000, mem_safe=True, filter_fn=fxn)
 
 
 def get_votes(timestamp):
