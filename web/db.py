@@ -1,7 +1,14 @@
 import aiosqlite
+import sqlite3
+from os import environ
 from datetime import datetime
+from asyncpraw import Reddit
 
 MINVOTES = 3
+REDDIT_CLIENT_ID = environ['REDDIT_CLIENT_ID']
+REDDIT_CLIENT_SECRET = environ['REDDIT_CLIENT_SECRET']
+REDDIT_USERNAME = environ['REDDIT_USERNAME']
+REDDIT_PASSWORD = environ['REDDIT_PASSWORD']
 
 
 class DB:
@@ -136,6 +143,44 @@ class DB:
                     where timestamp >= ?
                     group by unit''', [date_format, epoch])
         return c
+
+    async def add_bot(self, user):
+        async with Reddit(
+            client_id=REDDIT_CLIENT_ID,
+            client_secret=REDDIT_CLIENT_SECRET,
+            password=REDDIT_PASSWORD,
+            user_agent='mobile:botranker:0.1 (by /u/brandawg93)',
+            username=REDDIT_USERNAME) as r:
+            bot = await r.redditor(user)
+            await bot.load()
+            try:
+                # Insert a row of data
+                data = [str(bot.name), bot.comment_karma, bot.link_karma]
+                await self.conn.execute("INSERT INTO bots VALUES (?, ?, ?)", data)
+                print('Adding bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
+                                                                                        bot.link_karma))
+            except sqlite3.IntegrityError:
+                data = [bot.comment_karma, bot.link_karma, str(bot.name)]
+                await self.conn.execute("UPDATE bots SET comment_karma = ?, link_karma = ? WHERE bot = ?", data)
+                print('Updating bot {} with comment karma={}, link karma={}.'.format(bot.name, bot.comment_karma,
+                                                                                            bot.link_karma))
+
+            except Exception as e:
+                print(e)
+
+
+    async def add_vote(self, vote, vote_type):
+        # Insert a row of data
+        await self.conn.execute("INSERT INTO votes VALUES (?, ?, ?, ?, ?, ?)",
+                    [vote.parent,
+                    vote.id,
+                    vote.subreddit,
+                    vote.created_utc,
+                    vote_type[0],
+                    vote.voter
+                    ])
+        print('Adding vote with id={}, bot={}, vote={}.'.format(vote.id, vote.parent, vote_type[0]))
+        await self.add_bot(vote.parent)
 
     async def close(self):
         # commit the changes to db

@@ -28,6 +28,16 @@ def get_epoch(after):
     return int((datetime.datetime.now() - tdelta).strftime('%s'))
 
 
+async def add_vote(vote, vote_type):
+    db = DB(DB_FILE)
+    try:
+        await db.connect()
+        await db.add_vote(vote, vote_type)
+        await db.close()
+    except Exception as e:
+        await db.close()
+        raise e
+
 @cached(ttl=TTL, serializer=PickleSerializer())
 async def get_ranks(after='1y', sort='top', bot=None, limit=None):
     if sort == 'hot':

@@ -1,6 +1,7 @@
 aiocache==0.11.1
 aiofiles==0.8.0
 aiosqlite==0.17.0
+asyncpraw==7.7.0
 fastapi==0.79.0
 graphene==3.1
 Jinja2==3.1.2
