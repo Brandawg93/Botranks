@@ -1,3 +1,7 @@
+.notice {
+  color: white;
+}
+
 @media (prefers-color-scheme: dark) {
   body {
     background-color: black;
@@ -59,11 +63,19 @@
   .back-to-top {
     background-color: #d9d9d9;
   }
+
+  .notice {
+    color: black;
+  }
 }
 
 @media (prefers-color-scheme: no-preference) {
   .back-to-top {
     background-color: #d9d9d9;
+  }
+
+  .notice {
+    color: black;
   }
 }
 
