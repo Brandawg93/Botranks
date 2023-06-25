@@ -50,8 +50,8 @@
           crossorigin="anonymous">
         </script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-        <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script> -->
-        <!-- <script src="static/js/grid.js"></script> -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
+        <script src="static/js/grid.js"></script>
         <script src="static/js/common.js"></script>
 	</head>
 	<body>
@@ -66,7 +66,7 @@
                         <a class="nav-link active" href="/">Ranks</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link disabled" href="/stats">Stats</a>
+                        <a class="nav-link" href="/stats">Stats</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/about">About</a>
@@ -79,8 +79,8 @@
                         </a>
                     <div class="dropdown-menu dropdown-menu-right" id="dropdownSort" aria-labelledby="navbarSort">
                         <a class="dropdown-item active" href="#" data-value="top">Top</a>
-                        <a class="dropdown-item disabled" href="#" data-value="hot">Hot</a>
-                        <a class="dropdown-item disabled" href="#" data-value="controversial">Controversial</a>
+                        <a class="dropdown-item" href="#" data-value="hot">Hot</a>
+                        <a class="dropdown-item" href="#" data-value="controversial">Controversial</a>
                     </div>
                     </li>
                     <div class="dropdown-duration">
@@ -89,9 +89,9 @@
                             Duration
                             </a>
                         <div class="dropdown-menu dropdown-menu-right" id="dropdownDuration" aria-labelledby="navbarDuration">
-                            <a class="dropdown-item disabled" href="#" data-value="1d">Day</a>
-                            <a class="dropdown-item disabled" href="#" data-value="1w">Week</a>
-                            <a class="dropdown-item disabled" href="#" data-value="1M">Month</a>
+                            <a class="dropdown-item" href="#" data-value="1d">Day</a>
+                            <a class="dropdown-item" href="#" data-value="1w">Week</a>
+                            <a class="dropdown-item" href="#" data-value="1M">Month</a>
                             <a class="dropdown-item active" href="#" data-value="1y">Year</a>
                         </div>
                     </li>
@@ -100,10 +100,30 @@
             </div>
         </nav>
         <br/>
-        <div class="container text-center pb-5">
-            <span style="color: white">
-                Unfortunately, Pushshift access has been severely limited due to new restrctions placed by Reddit. If and when these restrictions are lifted, this site will be back up and running. For more information, please see <a target="_blank" href="https://www.reddit.com/r/modnews/comments/134tjpe/reddit_data_api_update_changes_to_pushshift_access/">this post</a>. Thank you for your patience.
-            </span>
+        <div id="loader" class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+        <div class="container">
+            <div class="md-form mt-0">
+                <input class="form-control searchbar shadow-none" type="text" placeholder="Search" aria-label="Search">
+            </div>
+            <div id="ranksGrid"></div>
+            <div id="updateContainer">
+                <div class="row">
+                    <div class="col-md">
+                        <span>
+                            <small id="lastUpdate"></small>
+                        </span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md">
+                        <span>
+                            <small id="totalVotes"></small>
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
         <footer class="footer">
             <div class="container text-center">
